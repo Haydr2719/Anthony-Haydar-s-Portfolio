@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/* Brand palette - 60% warm white / 30% charcoal / 10% muted olive */
+@theme {
+  --color-paper: #f7f6f1;
+  --color-paper-2: #efede5;
+  --color-stone: #e3e0d6;
+  --color-ink: #1f1f1d;
+  --color-ink-2: #2a2a27;
+  --color-ink-3: #3a3a36;
+  --color-muted: #5f5f59;
+  --color-olive: #747b65;
+  /* Slightly deeper olive for text/buttons so white text meets WCAG AA contrast */
+  --color-olive-deep: #5f6552;
+  --color-olive-soft: #dfe1d7;
+
+  --font-serif: var(--font-playfair), "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --animate-fade-up: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: var(--color-olive);
+    color: var(--color-paper);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-olive);
+    outline-offset: 3px;
+  }
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+}
+
+@layer components {
+  .container-x {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .container-x {
+      padding-inline: 2.5rem;
+    }
+  }
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-olive-deep);
+  }
+  .on-dark .eyebrow {
+    color: #a9b09a;
+  }
+  .prose-ah p + p {
+    margin-top: 1.1em;
+  }
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid var(--color-stone);
+    background: #fff;
+    padding: 0.7rem 0.9rem;
+    font-size: 1rem;
+    color: var(--color-ink);
+    border-radius: 2px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-olive);
+    box-shadow: 0 0 0 3px rgb(116 123 101 / 0.18);
+  }
+  .field-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-ink-3);
+  }
+}
+
+/* Thin scrollbar for dark panels (admin sidebar): transparent track, soft
+   warm-white thumb, no arrow buttons. Firefox uses scrollbar-*; Chrome/Safari/Edge
+   use the ::-webkit-scrollbar rules. */
+/* Standard properties only where ::-webkit-scrollbar isn't supported (Firefox):
+   Chrome ignores the ::-webkit-scrollbar rules (and shows arrow buttons) when
+   scrollbar-width / scrollbar-color are set. */
+@supports not selector(::-webkit-scrollbar) {
+  .scrollbar-dark {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(247 246 241 / 0.18) transparent;
+  }
+  .scrollbar-dark:hover {
+    scrollbar-color: rgb(247 246 241 / 0.32) transparent;
+  }
+}
+.scrollbar-dark::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: rgb(247 246 241 / 0.18);
+  border-radius: 9999px;
+}
+.scrollbar-dark:hover::-webkit-scrollbar-thumb {
+  background: rgb(247 246 241 / 0.32);
+}
+.scrollbar-dark::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* Hero scroll animation: text that animates in starts hidden (only with JS and
+   motion allowed - otherwise it's simply visible). GSAP's inline styles take over. */
+.js .hero-scroll [data-hero-hidden] {
+  opacity: 0;
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .hero-scroll [data-hero-hidden] {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+@keyframes hero-scroll-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(300%);
+  }
+}
+.hero-scroll-line {
+  animation: hero-scroll-line 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* Scroll reveal (progressively enhanced - content is visible without JS) */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}

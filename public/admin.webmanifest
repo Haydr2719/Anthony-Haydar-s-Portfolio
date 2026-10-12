@@ -1,0 +1,11 @@
+{
+  "name": "Anthony Haydar Admin",
+  "short_name": "AH Admin",
+  "description": "Manage website content and enquiries.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#f7f6f1",
+  "theme_color": "#1f1f1d",
+  "icons": [{ "src": "/admin-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
