@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils";
 
 type Status = "connecting" | "live" | "reconnecting" | "offline";
 
+// Channel names only need to be unique within this tab. (Not crypto.randomUUID:
+// it's missing on plain-HTTP origins such as http://192.168.x.x on a phone.)
+let channelSeq = 0;
+
 /**
  * Keeps the admin up to date with enquiries in real time (Supabase Realtime
  * "Postgres Changes" on the leads table - RLS means only admins get events).
@@ -49,7 +53,7 @@ export function LiveLeads() {
       // with the same name, which may still be subscribed (React dev mounts effects
       // twice; reconnects overlap with removal) - adding listeners to it throws.
       const current = supabase
-        .channel(`admin-leads-${crypto.randomUUID()}`)
+        .channel(`admin-leads-${++channelSeq}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, refresh);
       channel = current;
 

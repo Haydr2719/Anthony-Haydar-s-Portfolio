@@ -42,9 +42,9 @@ Copy `.env.example` → `.env.local`, then fill in:
 - [ ] Later, if a domain is bought: verify it in Resend and set `LEAD_FROM_EMAIL` (needed to email other people, e.g. Sarah or visitor auto-replies).
 
 ## 4. Brand assets
-- [x] Official logo — header, footer, admin, login and 404 pages use the real logo (built from `public/Anthony haydar full black logo.svg` with `npm run logo:build`).
+- [x] Official logo — header, footer, admin, login and 404 pages use the real logo (built from `public/Official Logo.svg` with `npm run logo:build`).
 - [x] Browser favicon — `src/app/icon.svg` (AH monogram).
-- [ ] **Ask the designer for the original vector logo** (AI / EPS / PDF / SVG). The current file was auto-traced from an image: fine on screen, but edges are slightly rough when printed large (business cards, stand signage). With the original, replace the master file and run `npm run logo:build`.
+- [ ] **Ask the designer for a vector AH monogram** (AI / EPS / PDF / SVG). In `public/Official Logo.svg` the name and subtitle are vectors, but the monogram is a 668 × 373 px bitmap: fine on screen, but soft when printed large (business cards, stand signage). With a vector version, update the master file and the monogram part of `scripts/build-logo.mjs`, then run `npm run logo:build`.
 - [ ] iPhone home-screen icon: add `src/app/apple-icon.png` (180×180 PNG — Apple doesn't accept SVG). Export it from `src/app/icon.svg`.
 - [ ] Admin app icon: also export a 512×512 PNG of `public/admin-icon.svg` for phones that don't show SVG icons; update `public/admin.webmanifest`, `public/sw.js` and `src/app/admin/layout.tsx`.
 - [ ] Default social sharing image (1200×630) → Admin → Site settings → *Default sharing image*.

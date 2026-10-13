@@ -129,22 +129,37 @@ supabase/archive/    old step-by-step SQL from development (don't run on product
 
 ### How to change the hero animation (developer task)
 
-1. **Export the new frames** from the video/animation tool as WebP images, **1080×1920 (portrait 9:16)**, numbered from 1 with 4 digits: `frame_0001.webp`, `frame_0002.webp`, … Keep the count reasonable (around 120–180 frames) — more frames means more to download.
+**Easiest — from a video clip** (needs [ffmpeg](https://ffmpeg.org) installed, e.g. `winget install Gyan.FFmpeg`):
+
+1. Put the clip in the project (ideally a portrait **1080×1920** MP4, ~5–7 seconds) and run:
+   `npm run frames:extract -- path/to/clip.mp4`
+   This replaces every frame in `public/frames/` (WebP, 1080×1920, cropped to 9:16 if needed) and rebuilds `public/frames-mobile/` automatically. Add `--fps 20` for a longer clip to keep the frame count down (around 120–180 frames is ideal — more frames means more to download).
+2. If the script warns that the frame count changed, update `FRAME_COUNT` at the top of `src/components/site/hero-scroll.tsx` to the number it prints.
+3. Move the source clip out of `public/` afterwards — anything in `public/` is downloadable from the live site.
+
+**Alternatively — from exported images:**
+
+1. **Export the frames** from the video/animation tool as WebP images, **1080×1920 (portrait 9:16)**, numbered from 1 with 4 digits: `frame_0001.webp`, `frame_0002.webp`, …
 2. **Replace the desktop frames:** delete the old files in `public/frames/` and copy the new ones in.
-3. **Update the frame count** if it changed: set `FRAME_COUNT` at the top of `src/components/site/hero-scroll.tsx` to the number of files (e.g. `180`).
-4. **Regenerate the mobile frames:** run `npm run frames:mobile`. It rebuilds `public/frames-mobile/` (720×1280, much lighter) from the desktop frames.
-5. **Check locally:** `npm run dev`, open the homepage on desktop and with the browser's phone view (or a real phone), and scroll through the hero — first frame visible immediately, smooth scrubbing, last frame at the end.
-6. **Optional tweaks** in `hero-scroll.tsx`: `SCROLL_DISTANCE` (longer/shorter hero, e.g. `"100vh"`–`"200vh"`), `SCRUB` (smoothing), and the phrases in Admin → Page text → Home.
-7. **Deploy** (commit + push; Vercel rebuilds the site). Visitors may need a refresh to drop cached frames.
+3. **Update the frame count** if it changed: `FRAME_COUNT` at the top of `src/components/site/hero-scroll.tsx`.
+4. **Regenerate the mobile frames:** run `npm run frames:mobile`.
+
+**Then, either way:**
+
+1. **Check locally:** `npm run dev`, open the homepage on desktop and with the browser's phone view (or a real phone), and scroll through the hero — first frame visible immediately, smooth scrubbing, last frame at the end.
+2. **Optional tweaks** in `hero-scroll.tsx`: `SCROLL_DISTANCE` (longer/shorter hero, e.g. `"100vh"`–`"200vh"`), `SCRUB` (smoothing), and the phrases in Admin → Page text → Home.
+3. **Deploy** (commit + push; Vercel rebuilds the site). Visitors may need a refresh to drop cached frames.
+
+The previous frames are in Git history if you ever need them back: `git checkout -- public/frames public/frames-mobile` (before committing the new ones).
 
 ## Logo
 
-The master logo is `public/Anthony haydar full black logo.svg`. Run `npm run logo:build` after replacing it: `scripts/build-logo.mjs` removes the white background and tracing noise and creates every logo file the site uses:
+The master logo is `public/Official Logo.svg` (a Canva SVG export). Run `npm run logo:build` after replacing it: `scripts/build-logo.mjs` drops the background and text shadows, keeps the name and subtitle as vectors, and creates every logo file the site uses:
 `public/logo/full.svg` (stacked), `mark.svg` (AH monogram), `wordmark.svg` (name + subtitle), `name.svg` (name only), plus the favicon `src/app/icon.svg` and the admin app icon `public/admin-icon.svg`.
-The `Logo` component (`src/components/logo.tsx`) uses these as CSS masks, so one file shows dark on light backgrounds and light on dark ones: `<Logo />` (header), `<Logo stacked />` (footer, login, 404), `<Logo compact />` (monogram only). If a new master logo has a different layout, update the crop coordinates at the top of the script.
+The `Logo` component (`src/components/logo.tsx`) uses these as CSS masks, so one file shows dark on light backgrounds and light on dark ones: `<Logo />` (header), `<Logo stacked />` (footer, login, 404), `<Logo compact />` (monogram only). The script measures the crops itself and writes the matching aspect ratios into `logo.tsx`.
 
 ## Before launch — content still needed (§15)
-The original vector logo from the designer (the current master was auto-traced from an image), real photography/video, approved bio/mission/vision, verified experience, real portfolio items (delete the *sample* entries), contact details, legal texts (Privacy / Terms / Cookies are placeholders in *Page text → Legal pages*).
+A vector version of the AH monogram from the designer (in the current master it is a 668 × 373 px bitmap), real photography/video, approved bio/mission/vision, verified experience, real portfolio items (delete the *sample* entries), contact details, legal texts (Privacy / Terms / Cookies are placeholders in *Page text → Legal pages*).
 
 ## Notes
 - Brand colours live in `src/app/globals.css`. Buttons use a slightly deeper olive (`#5F6552`) than the brand olive (`#747B65`) so white button text meets WCAG AA contrast; the brand olive is used for lines, icons and accents.

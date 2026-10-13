@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "seed:generate": "node scripts/generate-seed.mjs",
     "logo:build": "node scripts/build-logo.mjs",
-    "frames:mobile": "node scripts/build-mobile-frames.mjs"
+    "frames:mobile": "node scripts/build-mobile-frames.mjs",
+    "frames:extract": "node scripts/extract-frames.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

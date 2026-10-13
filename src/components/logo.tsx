@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 // They're used as CSS masks filled with the current text colour, so the same file
 // works dark-on-light (header) and light-on-dark (footer, admin).
 const PARTS = {
-  full: { src: "/logo/full.svg", ratio: "984 / 556" },
-  mark: { src: "/logo/mark.svg", ratio: "620 / 361" },
-  wordmark: { src: "/logo/wordmark.svg", ratio: "980 / 132" },
-  name: { src: "/logo/name.svg", ratio: "980 / 78" },
+  full: { src: "/logo/full.svg", ratio: "656 / 387" },
+  mark: { src: "/logo/mark.svg", ratio: "427 / 248" },
+  wordmark: { src: "/logo/wordmark.svg", ratio: "656 / 93" },
+  name: { src: "/logo/name.svg", ratio: "656 / 55" },
 } as const;
 
 function Part({ part, className }: { part: keyof typeof PARTS; className?: string }) {
