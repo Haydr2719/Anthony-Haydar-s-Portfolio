@@ -27,20 +27,45 @@ Open http://localhost:3000. Without Supabase the site shows the built-in placeho
    | 3 | `supabase/migrations/03_content.sql` | Real starting content: settings & contact details, page text, the 4 services, Anthony's career & credentials, 11 client projects. No sample data. |
    | 4 | `supabase/migrations/04_admin_users.sql` | Admin access. First create the users in *Authentication → Users → Add user* (tick *Auto confirm*), check the emails in the file, then run it. |
 
-   Files 1, 2 and 4 are safe to re-run. File 3 never overwrites content already edited in the admin.
+   All four files are safe to re-run. File 3 never overwrites content already edited in the admin.
    The old step-by-step files used while building the site are in `supabase/archive/dev-history/` — **don't run them on production**.
-3. **Environment variables:** copy `.env.example` to `.env.local` and fill in, from *Project Settings → API*:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the *publishable* / *anon* key
-   - `SUPABASE_SERVICE_ROLE_KEY` — the *secret* / *service_role* key (server only — never expose it)
-4. Restart `npm run dev` and sign in at **/admin**.
+3. **Turn off public sign-ups:** *Authentication → Sign In / Providers →* untick *Allow new users to sign up*. Admins are added by hand (step 2, file 4), so nobody needs to register. (Non-admin accounts can't see or change anything extra anyway — this just keeps the user list clean.)
+4. **Environment variables:** copy `.env.example` to `.env` (or `.env.local`) and fill in:
+   - `NEXT_PUBLIC_SUPABASE_URL` — *Project Settings → Data API* (`https://<project-ref>.supabase.co`)
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — *Project Settings → API Keys*, the *publishable* key (`sb_publishable_…`)
+   - `SUPABASE_SERVICE_ROLE_KEY` — same page, the *secret* key (`sb_secret_…`). Server only — never expose it.
 
-> If tables seem inaccessible from the API, check *Integrations → Data API* settings — `02_security.sql` grants the `anon` / `authenticated` roles explicitly, and RLS is enabled on every table.
+   The URL and both keys must come from the **same** project, otherwise every request fails with *Invalid API key*. The legacy JWT keys (`eyJ…`) are disabled on this project — use the new keys. (The old variable name `NEXT_PUBLIC_SUPABASE_ANON_KEY` still works as a fallback.)
+5. Restart `npm run dev` (environment variables are only read at startup) and sign in at **/admin**.
+
+**Check the setup** in the SQL Editor — a fresh database should give:
+
+| Table | Rows |
+|---|---|
+| `site_settings` | 1 |
+| `pages` | 18 |
+| `content_blocks` | 86 |
+| `services` | 4 |
+| `projects` | 11 (9 published, 2 drafts) |
+| `experience` | 17 |
+| `admin_users` | one per admin |
+
+Then send a test enquiry from the contact page and check it appears in */admin → Enquiries*.
+
+> **Never put real keys in `.env.example`** — it is committed, and the repository is public. Real values go only in `.env` / `.env.local` (git-ignored) and in the hosting settings.
+>
+> **Table access on new projects:** Supabase projects created since May 2026 don't give the API roles access to new tables automatically. `02_security.sql` grants it explicitly — `anon` / `authenticated` (limited further by RLS, which is on for every table) and `service_role` (the server's secret key: saving enquiries, banner clicks, push notifications). If a table is ever unreachable (*permission denied*), a missing grant is the first thing to check.
+
+### Starting content (seed)
+
+`03_content.sql` is the seed: real content from the brief and Anthony's CV, no sample data — site settings and contact details, SEO for every page, all page text, the 4 services, 11 client projects (Sira and Cherry on top stay drafts until the clients approve) and 17 career entries. Drinks, training, events, media, testimonials, partners and banners start empty and are added in `/admin`.
+
+It is generated from `src/content/fallback.ts` with `npm run seed:generate` — edit that file, not the SQL. After launch, edit content in `/admin` instead; re-running the seed only fills in missing rows and never overwrites admin edits.
 
 ### Getting notified of new enquiries
 
 **Browser push notifications** (recommended, plus email as a backup):
-1. Run `npx web-push generate-vapid-keys` once and put the keys in `.env.local` and your hosting settings as `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (plus `VAPID_SUBJECT=mailto:your@email`). Keep the same keys forever — new keys disconnect every device.
+1. Run `npx web-push generate-vapid-keys` once and put the keys in `.env` and your hosting settings as `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`, plus `VAPID_SUBJECT=mailto:consultancy@anthonyhaydar.com` (a real inbox, no space after `mailto:` — Apple rejects malformed subjects). Keep the same keys forever — new keys disconnect every device. The subject can be changed at any time.
 2. In `/admin`, click **Enable notifications** (bottom of the sidebar) on each device — laptop, phone — and allow notifications. Use **Send test** to check.
    - **iPhone/iPad:** open the admin in Safari → Share → *Add to Home Screen*, open it from that icon, then enable notifications (Apple requirement, iOS 16.4+).
    - Clicking a notification opens that enquiry in the admin.
@@ -49,19 +74,27 @@ Open http://localhost:3000. Without Supabase the site shows the built-in placeho
 
 **Email with a Gmail address (no domain needed):** create the Resend account with the same Gmail you set as `LEAD_NOTIFY_EMAIL`, and leave `LEAD_FROM_EMAIL` empty. Emails then come from `onboarding@resend.dev`; pressing *Reply* answers the visitor directly. (Sending to other addresses, or emailing visitors, requires verifying a domain in Resend.)
 
-### Optional services
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Browser push notifications for new enquiries |
-| `RESEND_API_KEY`, `LEAD_NOTIFY_EMAIL`, `LEAD_FROM_EMAIL` | Email notification for every enquiry (resend.com) |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile captcha on forms |
-| `NEXT_PUBLIC_GA_ID` | Google Analytics 4 (loaded only after cookie consent) |
-| `NEXT_PUBLIC_META_PIXEL_ID` | Meta Pixel (loaded only after cookie consent) |
-| `NEXT_PUBLIC_SITE_URL` | Production URL for canonical links, sitemap and social cards |
+### Environment variables
+
+All of them are listed, with comments, in `.env.example`. Variables starting with `NEXT_PUBLIC_` are sent to the browser — never use that prefix for a secret.
+
+| Variable | Needed? | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Required | Connects the site and admin to Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Required | Secret key (server only): saves enquiries and banner clicks, sends push notifications |
+| `NEXT_PUBLIC_SITE_URL` | Required in production | Canonical links, sitemap and social cards (`https://anthonyhaydar.com`) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Recommended | Browser push notifications for new enquiries |
+| `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_CONTACT_WHATSAPP` | Recommended | Buttons on the "temporarily unavailable" page (see Notes) |
+| `RESEND_API_KEY`, `LEAD_NOTIFY_EMAIL`, `LEAD_FROM_EMAIL` | Optional | Email notification for every enquiry (resend.com) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional | Cloudflare Turnstile captcha on forms |
+| `NEXT_PUBLIC_GA_ID` | Optional | Google Analytics 4 (loaded only after cookie consent) |
+| `NEXT_PUBLIC_META_PIXEL_ID` | Optional | Meta Pixel (loaded only after cookie consent) |
+
+When you add or rename a variable, update `.env.example` too (names and comments only — no real values).
 
 ## Deploying (Vercel recommended)
 
-Import the repo in Vercel, add the same environment variables, deploy. Public pages are static and refresh every 60 seconds (scheduled posts and banner dates go live on time); saving in the CMS refreshes them immediately.
+Import the repo in Vercel, add the same environment variables as in your `.env` (*Settings → Environment Variables*), deploy. `NEXT_PUBLIC_` values are built into the site, so redeploy after changing any of them. Public pages are static and refresh every 60 seconds (scheduled posts and banner dates go live on time); saving in the CMS refreshes them immediately.
 
 ---
 
@@ -159,7 +192,7 @@ The master logo is `public/Official Logo.svg` (a Canva SVG export). Run `npm run
 The `Logo` component (`src/components/logo.tsx`) uses these as CSS masks, so one file shows dark on light backgrounds and light on dark ones: `<Logo />` (header), `<Logo stacked />` (footer, login, 404), `<Logo compact />` (monogram only). The script measures the crops itself and writes the matching aspect ratios into `logo.tsx`.
 
 ## Before launch — content still needed (§15)
-A vector version of the AH monogram from the designer (in the current master it is a 668 × 373 px bitmap), real photography/video, approved bio/mission/vision, verified experience, real portfolio items (delete the *sample* entries), contact details, legal texts (Privacy / Terms / Cookies are placeholders in *Page text → Legal pages*).
+A vector version of the AH monogram from the designer (in the current master it is a 668 × 373 px bitmap), real photography/video, approved bio/mission/vision, verified experience, client approval to publish the Sira and Cherry on top projects (drafts), the public contact email in *Site settings* (the seed uses `anthony.h2719@gmail.com`; the env files use `consultancy@anthonyhaydar.com`), legal texts (Privacy / Terms / Cookies are placeholders in *Page text → Legal pages*).
 
 ## Notes
 - Brand colours live in `src/app/globals.css`. Buttons use a slightly deeper olive (`#5F6552`) than the brand olive (`#747B65`) so white button text meets WCAG AA contrast; the brand olive is used for lines, icons and accents.

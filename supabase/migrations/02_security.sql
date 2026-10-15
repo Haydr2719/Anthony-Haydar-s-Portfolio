@@ -62,6 +62,12 @@ grant select, update, delete on public.leads to authenticated;
 grant select on public.banner_clicks to authenticated;
 grant select on public.admin_users to authenticated;
 
+-- The server (secret / service-role key: enquiries, banner clicks, push sending).
+-- Projects created since May 2026 no longer grant table access automatically -
+-- not even to service_role - so without this the enquiry form can't save.
+-- service_role bypasses RLS; the key never leaves the server.
+grant select, insert, update, delete on all tables in schema public to service_role;
+
 -- -----------------------------------------------------------------------------
 -- Publishable content: public reads published rows, admins manage everything
 -- -----------------------------------------------------------------------------

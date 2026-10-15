@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: Props) {
           <p className="mt-1 text-sm text-muted">Sign in to manage content, banners and enquiries.</p>
           {!isSupabaseConfigured && (
             <p className="mt-5 rounded bg-paper-2 p-3 text-sm">
-              Supabase is not configured yet. Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to{" "}
+              Supabase is not configured yet. Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> to{" "}
               <code>.env.local</code> and restart the server.
             </p>
           )}

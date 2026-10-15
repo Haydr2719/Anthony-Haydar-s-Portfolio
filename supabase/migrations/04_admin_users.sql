@@ -15,7 +15,7 @@ select id, email
 from auth.users
 where lower(email) in (
   'joesdevelopments@gmail.com',
-  'anthony.h2719@gmail.com'      -- Anthony (confirm this is the email he signs in with)
+  'consultancy@anthonyhaydar.com',    -- Anthony (confirm this is the email he signs in with)
 )
 on conflict (user_id) do nothing;
 

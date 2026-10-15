@@ -23,7 +23,7 @@ Setup details for most items are in `README.md`.
 Copy `.env.example` → `.env.local`, then fill in:
 - [ ] `NEXT_PUBLIC_SITE_URL` — the live domain (e.g. `https://anthonyhaydar.com`)
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`
-- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` — publishable / anon key
+- [ ] `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — publishable key (`sb_publishable_…`)
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` — secret key, **server only, never share**
 - [ ] `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_CONTACT_WHATSAPP` — shown on the "temporarily unavailable" page
 - [ ] Push keys (see §3)
