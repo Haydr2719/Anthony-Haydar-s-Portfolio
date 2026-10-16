@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   Briefcase,
   CalendarDays,
@@ -13,6 +14,7 @@ import {
   Image as ImageIcon,
   Inbox,
   LayoutDashboard,
+  Loader2,
   LogOut,
   Megaphone,
   Menu,
@@ -30,6 +32,21 @@ import { Logo } from "@/components/logo";
 import { LiveLeads } from "./live-leads";
 import { PushToggle } from "./push-toggle";
 import { cn } from "@/lib/utils";
+
+/** Shows progress while the sign-out action runs and redirects to the login page. */
+function SignOutButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-paper/65 hover:text-paper disabled:hover:text-paper/65"
+    >
+      {pending ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+      {pending ? "Signing out…" : "Sign out"}
+    </button>
+  );
+}
 
 const ICONS: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -104,9 +121,7 @@ export function AdminNav({ links, email }: { links: NavLink[]; email: string }) 
             <ExternalLink className="size-4" /> View website
           </Link>
           <form action={signOut}>
-            <button type="submit" className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-paper/65 hover:text-paper">
-              <LogOut className="size-4" /> Sign out
-            </button>
+            <SignOutButton />
           </form>
           <p className="truncate px-3 pt-1 text-xs text-paper/40">{email}</p>
         </div>

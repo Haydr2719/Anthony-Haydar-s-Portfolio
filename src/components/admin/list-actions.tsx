@@ -1,10 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Loader2, Trash2 } from "lucide-react";
 import { deleteRecord, moveRecord } from "@/app/admin/actions";
 
+/**
+ * Reorder / delete buttons for one row of an admin list. The actions revalidate
+ * the list, so the updated list arrives in the same response and the transition
+ * stays pending until it's on screen. While pending, the wrapper carries
+ * `data-pending`, which the row uses to fade itself (`has-data-pending:`).
+ */
 export function ListActions({
   collection,
   id,
@@ -20,17 +25,16 @@ export function ListActions({
   first: boolean;
   last: boolean;
 }) {
-  const router = useRouter();
   const [pending, start] = useTransition();
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
     start(async () => {
       const res = await fn();
       if (!res.ok) alert(res.error ?? "Something went wrong");
-      router.refresh();
     });
 
   return (
-    <div className={`flex items-center justify-end gap-1 ${pending ? "opacity-50" : ""}`}>
+    <div data-pending={pending ? "" : undefined} aria-busy={pending} className="flex items-center justify-end gap-1">
+      {pending && <Loader2 className="mr-1 size-4 animate-spin text-muted" aria-label="Updating" />}
       {sortable && (
         <>
           <button type="button" disabled={first || pending} onClick={() => run(() => moveRecord(collection, id, "up"))} className="rounded p-1.5 text-muted hover:bg-paper-2 hover:text-ink disabled:opacity-25" aria-label="Move up">
@@ -46,7 +50,7 @@ export function ListActions({
           type="button"
           disabled={pending}
           onClick={() => confirm("Delete this entry? This cannot be undone.") && run(() => deleteRecord(collection, id))}
-          className="rounded p-1.5 text-muted hover:bg-red-50 hover:text-red-700"
+          className="rounded p-1.5 text-muted hover:bg-red-50 hover:text-red-700 disabled:opacity-25"
           aria-label="Delete"
         >
           <Trash2 className="size-4" />

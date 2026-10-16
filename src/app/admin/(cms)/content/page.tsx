@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { BlocksForm } from "@/components/admin/blocks-form";
+import { PendingTabs } from "@/components/admin/pending-tabs";
 import { AdminHeader } from "@/components/admin/ui";
 import { fallbackBlocks } from "@/content/fallback";
 import { requireAdmin } from "@/lib/cms/auth";
 import type { ContentBlock } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 const PAGES = [
   { key: "home", label: "Home" },
@@ -37,21 +36,15 @@ export default async function ContentPage({ searchParams }: Props) {
         title="Page text"
         description='Headlines and copy for each page. Lists use one item per line; "Title | description" lines are split into two parts.'
       />
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
-        {PAGES.map((p) => (
-          <Link
-            key={p.key}
-            href={`/admin/content?page=${p.key}`}
-            className={cn(
-              "shrink-0 rounded-md border px-3 py-2 text-sm",
-              p.key === page ? "border-ink bg-ink text-paper" : "border-stone bg-white hover:border-ink",
-            )}
-          >
-            {p.label}
-          </Link>
-        ))}
-      </div>
-      <BlocksForm key={page} page={page} blocks={blocks} />
+      <PendingTabs
+        current={page}
+        tabs={PAGES.map((p) => ({ value: p.key, label: p.label, href: `/admin/content?page=${p.key}` }))}
+        loadingLabel="Loading page text…"
+        className="mb-6 overflow-x-auto pb-1"
+        tabClassName="py-2"
+      >
+        <BlocksForm key={page} page={page} blocks={blocks} />
+      </PendingTabs>
     </>
   );
 }

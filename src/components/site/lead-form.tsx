@@ -11,9 +11,12 @@ import { cn } from "@/lib/utils";
 
 const TURNSTILE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-interface LeadFormProps {
+export interface LeadFormProps {
   services: string[];
   defaultType?: string;
+  /** Controlled enquiry type, for a parent that shows its own type picker (Contact page). */
+  type?: string;
+  onTypeChange?: (type: string) => void;
   defaultService?: string;
   eventId?: string;
   programId?: string;
@@ -28,6 +31,8 @@ interface LeadFormProps {
 export function LeadForm({
   services,
   defaultType = "consultation",
+  type,
+  onTypeChange,
   defaultService,
   eventId,
   programId,
@@ -106,13 +111,18 @@ export function LeadForm({
       {programId && <input type="hidden" name="program_id" value={programId} />}
 
       {compact ? (
-        <input type="hidden" name="lead_type" value={defaultType} />
+        <input type="hidden" name="lead_type" value={type ?? defaultType} />
       ) : (
         <div className="sm:col-span-2">
           <label htmlFor="lf-lead_type" className={labelCls}>
             How can Anthony help?
           </label>
-          <select id="lf-lead_type" name="lead_type" defaultValue={defaultType} className="field">
+          <select
+            id="lf-lead_type"
+            name="lead_type"
+            {...(type !== undefined ? { value: type, onChange: (e) => onTypeChange?.(e.target.value) } : { defaultValue: defaultType })}
+            className="field"
+          >
             {LEAD_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}

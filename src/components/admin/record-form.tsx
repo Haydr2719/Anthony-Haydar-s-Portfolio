@@ -38,7 +38,11 @@ export function RecordForm({
   const router = useRouter();
   const [values, setValues] = useState<Record<string, unknown>>(initial);
   const [result, setResult] = useState<SaveResult | null>(null);
-  const [pending, startTransition] = useTransition();
+  // Separate transitions so each button shows its own progress; the form is
+  // locked while either runs.
+  const [saving, startSave] = useTransition();
+  const [deleting, startDelete] = useTransition();
+  const busy = saving || deleting;
   const set = (name: string) => (v: unknown) => setValues((prev) => ({ ...prev, [name]: v }));
 
   // Group fields by section, keeping the order of first appearance.
@@ -50,19 +54,23 @@ export function RecordForm({
     g.fields.push(f);
   }
 
+  // The save/delete actions revalidate, so the refreshed page arrives in the same
+  // response (no router.refresh needed). Navigations after an `await` are wrapped
+  // in startTransition again so the form stays locked until the next page is shown.
   const save = () =>
-    startTransition(async () => {
+    startSave(async () => {
       const res = collectionKey ? await saveRecord(collectionKey, id ?? null, values) : await saveSettings(values);
       setResult(res);
-      if (res.ok && collectionKey && !id && res.id) router.replace(`/admin/${collectionKey}/${res.id}?created=1`);
-      else if (res.ok) router.refresh();
+      if (res.ok && collectionKey && !id && res.id) {
+        startSave(() => router.replace(`/admin/${collectionKey}/${res.id}?created=1`));
+      }
     });
 
   const remove = () => {
     if (!collectionKey || !id || !confirm(`Delete this ${singular.toLowerCase()}? This cannot be undone.`)) return;
-    startTransition(async () => {
+    startDelete(async () => {
       const res = await deleteRecord(collectionKey, id);
-      if (res.ok) router.push(`/admin/${collectionKey}`);
+      if (res.ok) startDelete(() => router.push(`/admin/${collectionKey}`));
       else setResult(res);
     });
   };
@@ -77,7 +85,8 @@ export function RecordForm({
       }}
       className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start"
     >
-      <div className="space-y-6">
+      {/* A disabled <fieldset> natively disables every field and upload button inside it. */}
+      <fieldset disabled={busy} className={cn("min-w-0 space-y-6 transition-opacity", busy && "opacity-60")}>
         {groups.map((g) => (
           <fieldset key={g.name} className="rounded-lg border border-stone bg-white p-5 md:p-6">
             <legend className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted">{g.name}</legend>
@@ -97,12 +106,12 @@ export function RecordForm({
             </div>
           </fieldset>
         ))}
-      </div>
+      </fieldset>
 
       <aside className="space-y-4 lg:sticky lg:top-6">
         <div className="rounded-lg border border-stone bg-white p-5">
           {publishable && (
-            <div className="space-y-4">
+            <fieldset disabled={busy} className="min-w-0 space-y-4">
               <div>
                 <label htmlFor="f-status" className="mb-1.5 block text-[0.8rem] font-medium text-ink-3">
                   Status
@@ -118,16 +127,16 @@ export function RecordForm({
                 onChange={set("publish_at")}
               />
               {scheduled && <p className="rounded bg-olive-soft px-3 py-2 text-xs text-ink">Scheduled - goes live automatically on this date.</p>}
-            </div>
+            </fieldset>
           )}
 
           <button
             type="submit"
-            disabled={pending}
+            disabled={busy}
             className={cn("flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-olive-deep text-sm font-medium text-white hover:bg-ink disabled:opacity-60", publishable && "mt-5")}
           >
-            {pending && <Loader2 className="size-4 animate-spin" />}
-            {pending ? "Saving…" : id || !collectionKey ? "Save changes" : `Create ${singular.toLowerCase()}`}
+            {saving && <Loader2 className="size-4 animate-spin" />}
+            {saving ? "Saving…" : id || !collectionKey ? "Save changes" : `Create ${singular.toLowerCase()}`}
           </button>
 
           {result?.ok && (
@@ -151,8 +160,14 @@ export function RecordForm({
                 <span />
               )}
               {canDelete && id && (
-                <button type="button" onClick={remove} className="inline-flex items-center gap-1.5 text-red-700 hover:underline">
-                  <Trash2 className="size-4" /> Delete
+                <button
+                  type="button"
+                  onClick={remove}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 text-red-700 hover:underline disabled:no-underline disabled:opacity-60"
+                >
+                  {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                  {deleting ? "Deleting…" : "Delete"}
                 </button>
               )}
             </div>

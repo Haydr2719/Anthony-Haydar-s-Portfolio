@@ -73,7 +73,11 @@ export default async function CollectionListPage({ params }: Props) {
               {rows.map((row, i) => {
                 const id = String(row[idField]);
                 return (
-                  <tr key={id} className="border-b border-stone/70 last:border-0 hover:bg-paper/60">
+                  <tr
+                    key={id}
+                    // Fades while this row's reorder/delete is running (ListActions sets data-pending).
+                    className="border-b border-stone/70 transition-opacity last:border-0 hover:bg-paper/60 has-data-pending:pointer-events-none has-data-pending:opacity-50"
+                  >
                     <td className="px-4 py-3">
                       <Link href={`/admin/${col.key}/${encodeURIComponent(id)}`} className="flex items-center gap-3 font-medium hover:text-olive-deep">
                         {col.imageField && <Thumb src={(row[col.imageField] as string) || (row.poster_url as string)} />}
