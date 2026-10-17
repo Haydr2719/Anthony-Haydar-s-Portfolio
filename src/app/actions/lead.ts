@@ -164,12 +164,23 @@ async function notify(d: z.infer<typeof schema>) {
   const html = `<h2>New website enquiry</h2><table cellpadding="6">${rows
     .filter(([, v]) => v)
     .map(([k, v]) => `<tr><td><b>${k}</b></td><td>${esc(String(v)).replace(/\n/g, "<br>")}</td></tr>`)
-    .join("")}</table>`;
+    .join("")}</table>
+<p style="margin-top:24px;padding-top:12px;border-top:1px solid #ddd;color:#666;font-size:13px">
+Sent automatically from the contact form on anthonyhaydar.com. Click <b>Reply</b> to answer ${esc(d.name)} directly at
+<a href="mailto:${esc(d.email)}">${esc(d.email)}</a>.</p>`;
+  // The sender shows who wrote in: "Jane Smith via Website <website@…>". Only the
+  // address is taken from LEAD_FROM_EMAIL ("addr" or "Name <addr>"). The name is
+  // visitor input, so characters that could break the From header are removed.
+  const configured = process.env.LEAD_FROM_EMAIL?.trim() ?? "";
+  const fromAddress = configured.match(/<([^>]+)>/)?.[1] ?? (configured || "onboarding@resend.dev");
+  const visitor = d.name.replace(/["<>\\\r\n]/g, "").trim();
+  const from = `"${visitor ? `${visitor} via Website` : "Website"}" <${fromAddress}>`;
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: process.env.LEAD_FROM_EMAIL || "Website <onboarding@resend.dev>",
+      from,
       to: to.split(",").map((s) => s.trim()),
       reply_to: d.email,
       subject: `New enquiry: ${labelOf(LEAD_TYPES, d.lead_type)} - ${d.name}`,
