@@ -61,6 +61,19 @@ export function DrinkCard({ drink, tall }: { drink: Drink; tall?: boolean }) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent p-5 pt-16 text-paper">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-olive-soft">{labelOf(DRINK_CATEGORIES, drink.category)}</p>
         <h3 className="mt-1 text-xl leading-tight">{drink.name}</h3>
+        {/* Context slides open on hover / keyboard focus (0fr -> 1fr grid rows animates the
+            height). Tailwind's hover only applies on devices that can hover, so touch
+            screens keep the compact card and show the context on the detail page. */}
+        {drink.context && (
+          <div
+            aria-hidden
+            className="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-500 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-visible:grid-rows-[1fr] group-focus-visible:opacity-100 motion-reduce:transition-none"
+          >
+            <div className="min-h-0 overflow-hidden">
+              <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-paper/85">{drink.context}</p>
+            </div>
+          </div>
+        )}
       </div>
     </Link>
   );
