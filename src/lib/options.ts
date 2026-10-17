@@ -18,6 +18,8 @@ export const DRINK_CATEGORIES = [
   { value: "signature", label: "Signatures" },
   { value: "seasonal", label: "Seasonal" },
   { value: "brand_collaboration", label: "Brand Collaborations" },
+  { value: "coffee_shop", label: "Coffee Shop" },
+  { value: "bar", label: "Bar" },
 ] as const;
 
 export const EVENT_STATUSES = [
