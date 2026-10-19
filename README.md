@@ -28,6 +28,11 @@ Open http://localhost:3000. Without Supabase the site shows the built-in placeho
    | 4 | `supabase/migrations/04_admin_users.sql` | Admin access. First create the users in *Authentication → Users → Add user* (tick *Auto confirm*), check the emails in the file, then run it. |
 
    All four files are safe to re-run. File 3 never overwrites content already edited in the admin.
+   Later changes come as extra numbered files for databases that already exist (a new database already has them through files 1–4, and running them anyway is harmless):
+
+   | File | What it does |
+   |---|---|
+   | `supabase/migrations/05_drink_categories.sql` | Adds the *Coffee Shop* and *Bar* drink categories |
    The old step-by-step files used while building the site are in `supabase/archive/dev-history/` — **don't run them on production**.
 3. **Turn off public sign-ups:** *Authentication → Sign In / Providers →* untick *Allow new users to sign up*. Admins are added by hand (step 2, file 4), so nobody needs to register. (Non-admin accounts can't see or change anything extra anyway — this just keeps the user list clean.)
 4. **Environment variables:** copy `.env.example` to `.env` (or `.env.local`) and fill in:

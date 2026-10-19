@@ -177,7 +177,8 @@ create table if not exists public.drinks (
   slug            text not null unique,
   name            text not null,
   category        text not null default 'signature' check (category in (
-                    'coffee', 'cocktail', 'non_alcoholic', 'signature', 'seasonal', 'brand_collaboration')),
+                    'coffee', 'cocktail', 'non_alcoholic', 'signature', 'seasonal', 'brand_collaboration',
+                    'coffee_shop', 'bar')),
   concept         text,
   context         text,
   venue_brand     text,

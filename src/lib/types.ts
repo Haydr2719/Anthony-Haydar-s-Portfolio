@@ -121,7 +121,9 @@ export type DrinkCategory =
   | "non_alcoholic"
   | "signature"
   | "seasonal"
-  | "brand_collaboration";
+  | "brand_collaboration"
+  | "coffee_shop"
+  | "bar";
 
 export interface Drink extends Publishable, Seo {
   slug: string;
