@@ -188,28 +188,74 @@ export function HeroScroll({
 
     // ---------------------------------------------------------------------
     // Preloading: frame 1 first (drawn immediately), then the rest in the
-    // background. Never blocks the page render.
+    // background, never blocking the page render.
+    // Order is coarse-to-fine (every 32nd frame + the last, then every 16th,
+    // 8th...), so after a few downloads the whole animation is already covered
+    // and gets smoother as frames arrive - a fast scroll never runs into a long
+    // stretch of missing frames. Frames around the scroll position the visitor
+    // has reached jump the queue. A frame is shown only once fully decoded.
     // ---------------------------------------------------------------------
-    const loadFrame = (i: number) =>
-      new Promise<void>((resolve) => {
-        const img = new Image();
-        img.decoding = "async";
-        img.onload = () => {
-          if (disposed) return resolve();
-          loaded[i] = true;
-          requestDraw(); // draw() skips the work unless a closer frame became available
-          resolve();
-        };
-        img.onerror = () => resolve(); // a missing frame is skipped, not fatal
-        img.src = framePath(dir, i + 1);
-        images[i] = img;
-      });
+    const loadFrame = async (i: number) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = framePath(dir, i + 1);
+      images[i] = img;
+      try {
+        await img.decode(); // downloaded AND decoded, so drawing it never stutters
+      } catch {
+        return; // a missing / broken frame is skipped, not fatal
+      }
+      if (disposed) return;
+      loaded[i] = true;
+      requestDraw(); // draw() skips the work unless a closer frame became available
+    };
 
+    const order: number[] = [0, frameCount - 1];
+    const inOrder = new Uint8Array(frameCount);
+    inOrder[0] = inOrder[frameCount - 1] = 1;
+    for (let step = 32; step >= 1; step /= 2) {
+      for (let i = 0; i < frameCount; i += step) {
+        if (!inOrder[i]) {
+          inOrder[i] = 1;
+          order.push(i);
+        }
+      }
+    }
+    const requested = new Uint8Array(frameCount);
+    let cursor = 0;
+    const nextToLoad = () => {
+      // The visitor scrolled somewhere that isn't loaded yet: fetch around it first.
+      if (!loaded[currentFrame]) {
+        for (let d = 0; d < 8; d++) {
+          for (const i of [currentFrame + d, currentFrame - d]) {
+            if (i >= 0 && i < frameCount && !requested[i]) return i;
+          }
+        }
+      }
+      while (cursor < order.length && requested[order[cursor]]) cursor++;
+      return cursor < order.length ? order[cursor] : -1;
+    };
+    const MAX_PARALLEL = 6; // a steady queue keeps the order meaningful
+    let active = 0;
+    const pump = () => {
+      while (!disposed && active < MAX_PARALLEL) {
+        const i = nextToLoad();
+        if (i < 0) return;
+        requested[i] = 1;
+        active++;
+        loadFrame(i).finally(() => {
+          active--;
+          pump();
+        });
+      }
+    };
+
+    requested[0] = 1;
     loadFrame(0).then(() => {
       if (disposed) return;
       setFirstFrameReady(true);
       if (reducedMotion) return; // one static frame is enough
-      for (let i = 1; i < frameCount; i++) loadFrame(i);
+      pump();
     });
 
     // ---------------------------------------------------------------------
@@ -246,8 +292,7 @@ export function HeroScroll({
         // Keep the timeline exactly 1 unit long, so positions = scroll progress.
         tl.to({}, { duration: 1 }, 0);
 
-        // Scroll hint disappears as soon as scrolling starts.
-        tl.to("[data-hero-scroll-hint]", { autoAlpha: 0, duration: 0.04 }, 0);
+        // The scroll hint stays visible for the whole pinned animation (no tween).
 
         // Phrases: equal slices; ~20% in, ~60% hold, ~20% out. Last one stays.
         const slice = 1 / phrases.length;
@@ -331,7 +376,8 @@ export function HeroScroll({
         </div>
 
         {/* ---------- Text (real HTML, never drawn on the canvas) ---------- */}
-        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-12 text-paper [text-shadow:0_1px_12px_rgba(31,31,29,0.45)] md:order-1 md:justify-center md:px-12 md:pb-0 md:text-ink md:[text-shadow:none] lg:px-20 xl:px-24">
+        {/* Mobile bottom padding leaves room for the always-visible scroll hint below the CTA. */}
+        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-20 text-paper [text-shadow:0_1px_12px_rgba(31,31,29,0.45)] md:order-1 md:justify-center md:px-12 md:pb-0 md:text-ink md:[text-shadow:none] lg:px-20 xl:px-24">
           <p className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-olive-soft md:mb-6 md:text-olive-deep">{eyebrow}</p>
           {/* Mobile sizes scale with width AND height so short phones never overflow */}
           <h1 className="max-w-[22ch] font-serif text-[clamp(1.5rem,min(6.6vw,4.2svh),2.6rem)] leading-[1.06] md:max-w-none md:text-[clamp(2.2rem,3.3vw,3.6rem)]">
@@ -384,7 +430,7 @@ export function HeroScroll({
           </div>
         </div>
 
-        {/* ---------- Scroll hint (fades out once scrolling starts) ----------
+        {/* ---------- Scroll hint (visible during the whole animation) ----------
             Centred with a flex wrapper, not translate - GSAP animates this element. */}
         <div
           aria-hidden="true"

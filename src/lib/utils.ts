@@ -60,7 +60,7 @@ export function canOptimize(src?: string | null) {
   try {
     const host = new URL(src).hostname;
     const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : "";
-    return host.endsWith(".supabase.co") || host === supabaseHost || host === "i.ytimg.com" || host === "images.unsplash.com";
+    return host === supabaseHost || host === "i.ytimg.com" || host === "images.unsplash.com";
   } catch {
     return false;
   }
