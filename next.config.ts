@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
-  allowedDevOrigins: ["192.168.1.20","192.168.14.26"],
+  allowedDevOrigins: ["192.168.1.20","192.168.14.26","192.168.1.168"],
   async headers() {
     return [
       {

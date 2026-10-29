@@ -14,6 +14,13 @@ import { cn } from "@/lib/utils";
 export const FRAME_COUNT = 150;
 /** How far the user scrolls while the hero is pinned. Shorter = quicker hero. */
 export const SCROLL_DISTANCE = "150vh";
+/** Same on phones (below MOBILE_BREAKPOINT): ~one swipe finishes the animation. */
+export const MOBILE_SCROLL_DISTANCE = "80vh";
+/**
+ * Phones: use every Nth frame of the mobile folder. 1 = all frames (smoothest on
+ * slow drags), 2 = every other frame (half the download; smooth on a normal swipe).
+ */
+export const MOBILE_FRAME_STEP = 2;
 /** Scroll smoothing in seconds (0 = locked to the scrollbar, higher = floatier). */
 export const SCRUB = 0.3;
 /** Below this width the mobile frames and the full-screen layout are used. */
@@ -64,6 +71,8 @@ export interface HeroScrollProps {
   desktopFramesDir?: string;
   mobileFramesDir?: string;
   scrollDistance?: string;
+  mobileScrollDistance?: string;
+  mobileFrameStep?: number;
   scrub?: number;
   /**
    * How frames fit the canvas. Default: "cover" on phones (fills the whole
@@ -88,6 +97,8 @@ export function HeroScroll({
   desktopFramesDir = DESKTOP_FRAMES_DIR,
   mobileFramesDir = MOBILE_FRAMES_DIR,
   scrollDistance = SCROLL_DISTANCE,
+  mobileScrollDistance = MOBILE_SCROLL_DISTANCE,
+  mobileFrameStep = MOBILE_FRAME_STEP,
   scrub = SCRUB,
   objectFit,
 }: HeroScrollProps) {
@@ -105,6 +116,10 @@ export function HeroScroll({
     const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
     const dir = isMobile ? mobileFramesDir : desktopFramesDir;
     const fit = objectFit ?? (isMobile ? "cover" : "contain");
+    const distance = isMobile ? mobileScrollDistance : scrollDistance;
+    // Frames actually used: phones can skip frames (frame 1, 1+step, 1+2*step...).
+    const step = isMobile ? Math.max(1, Math.round(mobileFrameStep)) : 1;
+    const count = Math.ceil(frameCount / step);
 
     // ---------------------------------------------------------------------
     // Hero height = visible screen minus the sticky header, measured in JS.
@@ -131,8 +146,8 @@ export function HeroScroll({
     // Canvas drawing: "cover" fills the canvas (phones), "contain" shows the
     // whole frame (desktop). Never distorted.
     // ---------------------------------------------------------------------
-    const images: HTMLImageElement[] = new Array(frameCount);
-    const loaded: boolean[] = new Array(frameCount).fill(false);
+    const images: HTMLImageElement[] = new Array(count);
+    const loaded: boolean[] = new Array(count).fill(false);
     let currentFrame = 0; // frame index we want on screen
     let drawnFrame = -1; // frame index actually on the canvas
     let rafId = 0;
@@ -152,7 +167,7 @@ export function HeroScroll({
 
     // Nearest frame that has finished loading (so scrolling never shows a blank).
     const nearestLoaded = (index: number) => {
-      for (let d = 0; d < frameCount; d++) {
+      for (let d = 0; d < count; d++) {
         if (loaded[index - d]) return index - d;
         if (loaded[index + d]) return index + d;
       }
@@ -198,7 +213,7 @@ export function HeroScroll({
     const loadFrame = async (i: number) => {
       const img = new Image();
       img.decoding = "async";
-      img.src = framePath(dir, i + 1);
+      img.src = framePath(dir, i * step + 1);
       images[i] = img;
       try {
         await img.decode(); // downloaded AND decoded, so drawing it never stutters
@@ -210,25 +225,25 @@ export function HeroScroll({
       requestDraw(); // draw() skips the work unless a closer frame became available
     };
 
-    const order: number[] = [0, frameCount - 1];
-    const inOrder = new Uint8Array(frameCount);
-    inOrder[0] = inOrder[frameCount - 1] = 1;
-    for (let step = 32; step >= 1; step /= 2) {
-      for (let i = 0; i < frameCount; i += step) {
+    const order: number[] = [0, count - 1];
+    const inOrder = new Uint8Array(count);
+    inOrder[0] = inOrder[count - 1] = 1;
+    for (let stride = 32; stride >= 1; stride /= 2) {
+      for (let i = 0; i < count; i += stride) {
         if (!inOrder[i]) {
           inOrder[i] = 1;
           order.push(i);
         }
       }
     }
-    const requested = new Uint8Array(frameCount);
+    const requested = new Uint8Array(count);
     let cursor = 0;
     const nextToLoad = () => {
       // The visitor scrolled somewhere that isn't loaded yet: fetch around it first.
       if (!loaded[currentFrame]) {
         for (let d = 0; d < 8; d++) {
           for (const i of [currentFrame + d, currentFrame - d]) {
-            if (i >= 0 && i < frameCount && !requested[i]) return i;
+            if (i >= 0 && i < count && !requested[i]) return i;
           }
         }
       }
@@ -274,14 +289,14 @@ export function HeroScroll({
             trigger: section,
             pin: true,
             start: () => `top top+=${headerHeight()}`, // pin just below the sticky header
-            end: () => `+=${distanceToPx(scrollDistance)}`, // recalculated on resize
+            end: () => `+=${distanceToPx(distance)}`, // recalculated on resize
 
             scrub,
             invalidateOnRefresh: true,
           },
           onUpdate: () => {
             // Same (scrubbed) progress drives the frames and the text.
-            const index = Math.round(tl.progress() * (frameCount - 1));
+            const index = Math.round(tl.progress() * (count - 1));
             if (index !== currentFrame) {
               currentFrame = index;
               requestDraw();
@@ -344,7 +359,7 @@ export function HeroScroll({
         img.src = ""; // cancel downloads still in flight
       }
     };
-  }, [frameCount, desktopFramesDir, mobileFramesDir, scrollDistance, scrub, phrases.length, objectFit]);
+  }, [frameCount, desktopFramesDir, mobileFramesDir, scrollDistance, mobileScrollDistance, mobileFrameStep, scrub, phrases.length, objectFit]);
 
   return (
     // React-owned wrapper: ScrollTrigger's pin wraps the <section> in a
