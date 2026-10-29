@@ -38,6 +38,7 @@ import {
 } from "@/lib/data";
 import { toGalleryItem } from "@/lib/nav";
 import { pageMetadata } from "@/lib/seo";
+import { SITE_URL } from "@/lib/utils";
 
 export function generateMetadata(): Promise<Metadata> {
   return pageMetadata("home", "/");
@@ -82,8 +83,41 @@ export default async function HomePage() {
   const steps = b.pairs("method.steps");
   const stats = b.pairs("about.stats");
 
+  // Structured data for Google: the site name shown in results (WebSite) and the
+  // brand logo (Organization). Social links count only when they point to a
+  // profile, not just a site's homepage.
+  const org = `${SITE_URL}/#organization`;
+  const sameAs = [settings.instagram_url, settings.linkedin_url, settings.youtube_url, settings.tiktok_url].filter(
+    (u): u is string => {
+      try {
+        return Boolean(u) && new URL(u!).pathname.replace(/\/+$/, "") !== "";
+      } catch {
+        return false;
+      }
+    },
+  );
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: settings.site_name, publisher: { "@id": org } },
+      {
+        "@type": "Organization",
+        "@id": org,
+        name: settings.site_name,
+        url: `${SITE_URL}/`,
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/logo/logo-512.png`, width: 512, height: 512 },
+        description: settings.default_seo_description || undefined,
+        email: settings.email || undefined,
+        telephone: settings.phone || undefined,
+        sameAs: sameAs.length ? sameAs : undefined,
+        founder: { "@type": "Person", name: "Anthony Haydar", jobTitle: settings.tagline || undefined },
+      },
+    ],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       {/* 2. Hero - scroll-driven image sequence (src/components/site/hero-scroll.tsx) */}
       <HeroScroll
         eyebrow={b.get("hero.eyebrow")}

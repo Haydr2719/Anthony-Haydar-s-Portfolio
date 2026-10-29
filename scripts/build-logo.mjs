@@ -20,6 +20,11 @@
 //   public/logo/name.svg      "ANTHONY HAYDAR" only (narrow phones)
 //   src/app/icon.svg          browser tab icon (light monogram on charcoal)
 //   public/admin-icon.svg     admin app / notification icon (same design)
+//   src/app/favicon.ico       16/32/48px favicon (Google search results, browsers)
+//   src/app/icon1.png         192px icon (Google favicon, Android)
+//   src/app/apple-icon.png    180px iPhone/iPad home-screen icon
+//   public/logo/logo-512.png  logo for Google (Organization structured data on the homepage)
+//   public/logo/share-1200x630.png  link-preview image (upload as Social sharing image)
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -128,10 +133,13 @@ const crops = {
 const [cx, cy] = [(markBox[0] + markBox[2]) / 2, (markBox[1] + markBox[3]) / 2];
 const size = Math.round((markBox[2] - markBox[0]) * 1.26);
 const [ix, iy] = [Math.round(cx - size / 2), Math.round(cy - size / 2)];
-const icon = svg(
-  { attr: `${ix} ${iy} ${size} ${size}` },
-  `<rect x="${ix}" y="${iy}" width="${size}" height="${size}" rx="${Math.round(size * 0.2)}" fill="${INK}"/>${await monogram(PAPER)}`,
-);
+const lightMark = await monogram(PAPER);
+const iconSvg = (rounded) =>
+  svg(
+    { attr: `${ix} ${iy} ${size} ${size}` },
+    `<rect x="${ix}" y="${iy}" width="${size}" height="${size}" rx="${rounded ? Math.round(size * 0.2) : 0}" fill="${INK}"/>${lightMark}`,
+  );
+const icon = iconSvg(true);
 
 const darkMark = await monogram(INK);
 mkdirSync(`${root}public/logo`, { recursive: true });
@@ -143,6 +151,49 @@ const outputs = {
   "src/app/icon.svg": icon,
   "public/admin-icon.svg": icon,
 };
+// Raster icons (PNG / ICO) from the same artwork, for Google, browsers and phones.
+const png = (svgText, px) => sharp(Buffer.from(svgText), { density: 300 }).resize(px, px).png({ compressionLevel: 9 }).toBuffer();
+/** .ico container holding PNG images (supported by every current browser and Google). */
+const ico = (images) => {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(images.length, 4);
+  let offset = 6 + 16 * images.length;
+  const entries = images.map(({ px, data }) => {
+    const e = Buffer.alloc(16);
+    e.writeUInt8(px, 0); // width
+    e.writeUInt8(px, 1); // height
+    e.writeUInt16LE(1, 4); // colour planes
+    e.writeUInt16LE(32, 6); // bits per pixel
+    e.writeUInt32LE(data.length, 8);
+    e.writeUInt32LE(offset, 12);
+    offset += data.length;
+    return e;
+  });
+  return Buffer.concat([header, ...entries, ...images.map((i) => i.data)]);
+};
+const squareIcon = iconSvg(false);
+outputs["src/app/favicon.ico"] = ico(await Promise.all([16, 32, 48].map(async (px) => ({ px, data: await png(icon, px) }))));
+outputs["src/app/icon1.png"] = await png(icon, 192); // Google: square, a multiple of 48px
+outputs["src/app/apple-icon.png"] = await png(squareIcon, 180); // iOS rounds the corners itself
+outputs["public/logo/logo-512.png"] = await png(squareIcon, 512); // Organization logo (structured data)
+
+// Link-preview image (WhatsApp, LinkedIn, Facebook...): 1200x630, the stacked logo
+// centred on the warm-white background, taking ~55% of the height.
+const [fx, fy, fw, fh] = crops.full.attr.split(" ").map(Number);
+const shareH = fh / 0.55;
+const shareW = (shareH * 1200) / 630;
+const [shareX, shareY] = [fx - (shareW - fw) / 2, fy - (shareH - fh) / 2];
+const shareSvg = svg(
+  { attr: `${shareX} ${shareY} ${shareW} ${shareH}` },
+  `<rect x="${shareX}" y="${shareY}" width="${shareW}" height="${shareH}" fill="${PAPER}"/>${darkMark}${text([...nameGlyphs, ...subGlyphs])}`,
+);
+outputs["public/logo/share-1200x630.png"] = await sharp(Buffer.from(shareSvg), { density: 300 })
+  .resize(1200, 630)
+  .flatten({ background: PAPER })
+  .png({ compressionLevel: 9 })
+  .toBuffer();
+
 for (const [file, content] of Object.entries(outputs)) {
   writeFileSync(`${root}${file}`, content);
   console.log(`${file}  ${(content.length / 1024).toFixed(1)} KB`);
