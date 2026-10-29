@@ -8,8 +8,9 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
-      ...(supabaseHost && !supabaseHost.endsWith(".supabase.co")
+      // Only this project's public storage - not every Supabase project. Must match
+      // canOptimize() in src/lib/utils.ts (other hosts are shown unoptimized).
+      ...(supabaseHost
         ? [{ protocol: "https" as const, hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }]
         : []),
       { protocol: "https", hostname: "i.ytimg.com" },
