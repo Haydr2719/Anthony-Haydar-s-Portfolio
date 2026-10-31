@@ -104,24 +104,38 @@ export function DrinkCard({ drink, tall }: { drink: Drink; tall?: boolean }) {
   );
 }
 
-export function StatusBadge({ status }: { status?: string | null }) {
+/** `onLight`: placed on a white card instead of a photo, so the pale style becomes grey. */
+export function StatusBadge({ status, onLight }: { status?: string | null; onLight?: boolean }) {
   if (!status) return null;
-  const tone = status === "registration_open" ? "olive" : status === "sold_out" ? "ink" : status === "completed" ? "muted" : "light";
+  const tone = status === "registration_open" ? "olive" : status === "sold_out" ? "ink" : status === "completed" ? "muted" : onLight ? "muted" : "light";
   return <Badge tone={tone}>{labelOf(EVENT_STATUSES, status)}</Badge>;
 }
 
 export function ProgramCard({ program }: { program: Program }) {
+  // No cover photo: no placeholder - the badges move into the card as a text header.
+  const hasImage = Boolean(program.cover_image);
   return (
-    <Link href={`/training-events/workshops/${program.slug}`} className="group flex h-full flex-col border border-stone bg-white">
-      <div className="relative">
-        <MediaFrame src={program.cover_image} alt={program.title} ratio="16/9" sizes="(min-width: 1024px) 33vw, 100vw" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
-        <div className="absolute left-4 top-4 flex gap-2">
-          <Badge tone="light">{labelOf(PROGRAM_KINDS, program.kind)}</Badge>
-          <StatusBadge status={program.event_status} />
+    // text-ink: the card is white, so it must not inherit light text from a dark section
+    // (e.g. Corporate on the Training page).
+    <Link href={`/training-events/workshops/${program.slug}`} className="group flex h-full flex-col border border-stone bg-white text-ink">
+      {hasImage && (
+        <div className="relative">
+          <MediaFrame src={program.cover_image} alt={program.title} ratio="16/9" sizes="(min-width: 1024px) 33vw, 100vw" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
+          <div className="absolute left-4 top-4 flex gap-2">
+            <Badge tone="light">{labelOf(PROGRAM_KINDS, program.kind)}</Badge>
+            <StatusBadge status={program.event_status} />
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex flex-1 flex-col p-6">
-        {program.topic && <Eyebrow>{program.topic}</Eyebrow>}
+        {!hasImage && (
+          <div className="mb-5 flex flex-wrap gap-2">
+            <Badge tone="muted">{labelOf(PROGRAM_KINDS, program.kind)}</Badge>
+            <StatusBadge status={program.event_status} onLight />
+          </div>
+        )}
+        {/* "!" keeps the normal label colour even inside a dark section (.on-dark .eyebrow) */}
+        {program.topic && <Eyebrow className="!text-olive-deep">{program.topic}</Eyebrow>}
         <h3 className="mt-2 text-2xl leading-tight">{program.title}</h3>
         {program.summary && <p className="mt-3 text-sm leading-relaxed text-muted">{program.summary}</p>}
         <ul className="mt-5 space-y-2 text-sm text-ink-3">

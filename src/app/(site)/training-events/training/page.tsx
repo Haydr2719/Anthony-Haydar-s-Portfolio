@@ -5,6 +5,8 @@ import { BannerSlot } from "@/components/site/banners";
 import { ContactSection, PageHero, ProgramCard } from "@/components/site/cards";
 import { Button, EmptyState, Section, SectionHeader } from "@/components/ui";
 import { getBlocks, getPrograms, getService } from "@/lib/data";
+import { SHOW_SERVICE_IMAGES } from "@/lib/features";
+import { cn } from "@/lib/utils";
 import { pageMetadata } from "@/lib/seo";
 
 export function generateMetadata(): Promise<Metadata> {
@@ -18,6 +20,11 @@ export default async function TrainingPage() {
     getPrograms({ kinds: ["corporate"] }),
     getService("training-team-development"),
   ]);
+  const corporateAside = corporate.length
+    ? corporate.map((p) => <ProgramCard key={p.id} program={p} />)
+    : SHOW_SERVICE_IMAGES && service?.cover_image
+      ? <MediaFrame src={service.cover_image} alt="Team training session" ratio="4/3" />
+      : null;
 
   return (
     <>
@@ -38,8 +45,10 @@ export default async function TrainingPage() {
       </Section>
 
       <Section tone="ink" id="corporate">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-20">
-          <div>
+        {/* Right column only when there is something real to show (no image placeholder):
+            corporate programs, or the service photo if service images are switched on. */}
+        <div className={cn("grid gap-12", corporateAside && "lg:grid-cols-2 lg:items-center lg:gap-20")}>
+          <div className={corporateAside ? undefined : "max-w-3xl"}>
             <p className="eyebrow mb-4">Corporate</p>
             <h2 className="text-4xl leading-tight md:text-5xl">{b.get("corporate.title")}</h2>
             <p className="mt-5 text-lg text-paper/70">{b.get("corporate.text")}</p>
@@ -56,13 +65,7 @@ export default async function TrainingPage() {
               <Button href="#enquire">Plan a custom program</Button>
             </div>
           </div>
-          <div className="grid gap-5">
-            {corporate.length ? (
-              corporate.map((p) => <ProgramCard key={p.id} program={p} />)
-            ) : (
-              <MediaFrame src={service?.cover_image} alt="Team training session" ratio="4/3" />
-            )}
-          </div>
+          {corporateAside && <div className="grid gap-5">{corporateAside}</div>}
         </div>
       </Section>
 
