@@ -8,6 +8,7 @@ import { BannerSlot } from "@/components/site/banners";
 import { ContactSection, ProjectCard, ServiceCard } from "@/components/site/cards";
 import { Button, Eyebrow, Section, SectionHeader } from "@/components/ui";
 import { getProjects, getService, getServices } from "@/lib/data";
+import { SHOW_SERVICE_IMAGES } from "@/lib/features";
 import { entryMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -54,7 +55,9 @@ export default async function ServicePage({ params }: Props) {
       {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }} />}
 
       <section className="on-dark relative overflow-hidden bg-ink text-paper">
-        <MediaFrame src={service.cover_image} alt="" ratio="fill" className="!absolute inset-0 opacity-40" priority sizes="100vw" />
+        {SHOW_SERVICE_IMAGES && (
+          <MediaFrame src={service.cover_image} alt="" ratio="fill" className="!absolute inset-0 opacity-40" priority sizes="100vw" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/30" />
         <div className="container-x relative py-24 md:py-36">
           <Eyebrow className="mb-5">Consultancy</Eyebrow>

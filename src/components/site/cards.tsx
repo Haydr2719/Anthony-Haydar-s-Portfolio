@@ -3,21 +3,36 @@ import { ArrowRight, CalendarDays, Clock, MapPin, Users } from "lucide-react";
 import { MediaFrame } from "@/components/media";
 import { Badge, Button, Eyebrow } from "@/components/ui";
 import { getBlocks, getServices, getSettings } from "@/lib/data";
+import { SHOW_SERVICE_IMAGES } from "@/lib/features";
 import { DRINK_CATEGORIES, EVENT_STATUSES, PROGRAM_KINDS, PROJECT_CATEGORIES, labelOf } from "@/lib/options";
 import type { Drink, EventItem, Program, Project, Service } from "@/lib/types";
 import { cn, formatDateRange, formatTime } from "@/lib/utils";
 import { LeadForm } from "./lead-form";
 
 export function ServiceCard({ service, index }: { service: Service; index?: number }) {
+  // Without images (src/lib/features.ts): a deep-olive text card with white text.
+  const images = SHOW_SERVICE_IMAGES;
   return (
-    <Link href={`/consultancy/${service.slug}`} className="group flex h-full flex-col border border-stone bg-white transition-shadow duration-500 hover:shadow-[0_24px_50px_-30px_rgba(31,31,29,0.45)]">
-      <MediaFrame src={service.cover_image} alt={service.title} ratio="4/3" sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
-      <div className="flex flex-1 flex-col p-6">
-        {index !== undefined && <span className="mb-3 text-xs font-medium tracking-[0.2em] text-olive-deep">0{index + 1}</span>}
+    <Link
+      href={`/consultancy/${service.slug}`}
+      className={cn(
+        "group flex h-full flex-col transition-[box-shadow,background-color] duration-500",
+        images
+          ? "border border-stone bg-white hover:shadow-[0_24px_50px_-30px_rgba(31,31,29,0.45)]"
+          : "on-dark min-h-60 bg-olive-deep text-paper hover:bg-ink",
+      )}
+    >
+      {images && (
+        <MediaFrame src={service.cover_image} alt={service.title} ratio="4/3" sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" imgClassName="transition-transform duration-700 group-hover:scale-[1.04]" />
+      )}
+      <div className={cn("flex flex-1 flex-col", images ? "p-6" : "p-7")}>
+        {index !== undefined && (
+          <span className={cn("mb-3 text-xs font-medium tracking-[0.2em]", images ? "text-olive-deep" : "text-paper/70")}>0{index + 1}</span>
+        )}
         <h3 className="text-2xl leading-tight">{service.title}</h3>
-        {service.tagline && <p className="mt-2 text-sm text-muted">{service.tagline}</p>}
+        {service.tagline && <p className={cn("mt-2 text-sm", images ? "text-muted" : "text-paper/75")}>{service.tagline}</p>}
         <span className="mt-auto flex justify-end pt-6">
-          <ArrowRight className="size-5 text-ink transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+          <ArrowRight className={cn("size-5 transition-transform duration-300 group-hover:translate-x-1", images ? "text-ink" : "text-paper")} aria-hidden />
         </span>
       </div>
     </Link>

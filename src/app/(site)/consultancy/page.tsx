@@ -7,6 +7,7 @@ import { BannerSlot } from "@/components/site/banners";
 import { ContactSection, CtaBand, PageHero } from "@/components/site/cards";
 import { Section } from "@/components/ui";
 import { getBlocks, getServices } from "@/lib/data";
+import { SHOW_SERVICE_IMAGES } from "@/lib/features";
 import { pageMetadata } from "@/lib/seo";
 
 export function generateMetadata(): Promise<Metadata> {
@@ -26,10 +27,19 @@ export default async function ConsultancyPage() {
             <Reveal key={s.slug}>
               <article className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-20">
                 <Link href={`/consultancy/${s.slug}`} className={i % 2 ? "lg:order-2" : undefined} tabIndex={-1} aria-hidden>
-                  <MediaFrame src={s.cover_image} alt={s.title} ratio="4/3" sizes="(min-width: 1024px) 50vw, 100vw" />
+                  {SHOW_SERVICE_IMAGES ? (
+                    <MediaFrame src={s.cover_image} alt={s.title} ratio="4/3" sizes="(min-width: 1024px) 50vw, 100vw" />
+                  ) : (
+                    // No images (src/lib/features.ts): a deep-olive panel with the number and tagline.
+                    <div className="on-dark flex aspect-[16/9] flex-col justify-between bg-olive-deep p-8 text-paper transition-colors duration-500 hover:bg-ink md:p-12 lg:aspect-[4/3]">
+                      <span className="font-serif text-6xl leading-none text-paper/90 md:text-8xl">0{i + 1}</span>
+                      {s.tagline && <p className="max-w-sm font-serif text-2xl leading-snug md:text-3xl">{s.tagline}</p>}
+                    </div>
+                  )}
                 </Link>
                 <div>
-                  <p className="eyebrow mb-4">0{i + 1}</p>
+                  {/* The panel already shows the number when there are no images */}
+                  {SHOW_SERVICE_IMAGES && <p className="eyebrow mb-4">0{i + 1}</p>}
                   <h2 className="text-4xl leading-tight md:text-5xl">{s.title}</h2>
                   {s.summary && <p className="mt-4 text-lg text-muted">{s.summary}</p>}
                   <ul className="mt-8 grid gap-x-6 gap-y-3 sm:grid-cols-2">
