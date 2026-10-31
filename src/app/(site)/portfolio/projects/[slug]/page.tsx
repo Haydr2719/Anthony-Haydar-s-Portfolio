@@ -1,29 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Check } from "lucide-react";
 import { MediaFrame } from "@/components/media";
 import { Gallery, VideoCard } from "@/components/media-client";
 import { CtaBand, ProjectCard } from "@/components/site/cards";
 import { Eyebrow, Prose, Section, SectionHeader, toParagraphs } from "@/components/ui";
-import { getMedia, getProject, getProjects, getServices } from "@/lib/data";
+import { getMedia, getProject, getProjects, getServices, getSettings } from "@/lib/data";
 import { toGalleryItem } from "@/lib/nav";
 import { PROJECT_CATEGORIES, labelOf } from "@/lib/options";
 import { entryMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
+// Detail pages can be switched off in Admin -> Settings -> Portfolio.
+const detailsOn = async () => Boolean((await getSettings()).show_project_details);
+
 export async function generateStaticParams() {
+  // Switched on later? Pages not built here are rendered on first visit.
+  if (!(await detailsOn())) return [];
   return (await getProjects()).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!(await detailsOn())) return {};
   const { slug } = await params;
   const p = await getProject(slug);
   return entryMetadata(p, p?.title ?? "Project", p?.summary, p?.cover_image, `/portfolio/projects/${slug}`);
 }
 
 export default async function ProjectPage({ params }: Props) {
+  // Switched off: send links and bookmarks to the Projects list (temporary 307).
+  if (!(await detailsOn())) redirect("/portfolio/projects");
   const { slug } = await params;
   const project = await getProject(slug);
   if (!project) notFound();

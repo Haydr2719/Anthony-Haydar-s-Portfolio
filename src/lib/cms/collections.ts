@@ -140,6 +140,7 @@ export const COLLECTIONS: CollectionDef[] = [
     sortable: true,
     canCreate: true,
     canDelete: true,
+    // Hidden in the admin while Settings -> "Show client project detail pages" is off.
     publicPath: (r) => `/portfolio/projects/${r.slug}`,
     fields: [
       { name: "title", label: "Project name", type: "text", required: true },
@@ -478,6 +479,13 @@ export const SETTINGS_FIELDS: FieldDef[] = [
   { name: "default_seo_description", label: "Default meta description", type: "textarea", rows: 2, group: "SEO defaults" },
   { name: "default_og_image", label: "Default sharing image", type: "image", group: "SEO defaults" },
   { name: "show_build_credit", label: 'Show Built Credit in footer', type: "boolean", group: "Footer" },
+  {
+    name: "show_project_details",
+    label: "Show client project detail pages",
+    type: "boolean",
+    group: "Portfolio",
+    help: "Off: projects are listed but can't be opened. On: visitors can open each project's full case study.",
+  },
 ];
 
 export function getCollection(key: string) {

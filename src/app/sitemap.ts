@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getDrinks, getEvents, getProjects, getPrograms, getServices } from "@/lib/data";
+import { getDrinks, getEvents, getProjects, getPrograms, getServices, getSettings } from "@/lib/data";
 import { SITE_URL } from "@/lib/utils";
 
 export const revalidate = 3600;
@@ -26,7 +26,8 @@ const STATIC = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [services, projects, drinks, programs, events] = await Promise.all([
+  const [settings, services, projects, drinks, programs, events] = await Promise.all([
+    getSettings(),
     getServices(),
     getProjects(),
     getDrinks(),
@@ -41,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...STATIC.map((p) => entry(p, undefined, p === "" ? 1 : 0.8)),
     ...services.map((s) => entry(`/consultancy/${s.slug}`, s.updated_at, 0.9)),
-    ...projects.map((p) => entry(`/portfolio/projects/${p.slug}`, p.updated_at)),
+    ...(settings.show_project_details ? projects.map((p) => entry(`/portfolio/projects/${p.slug}`, p.updated_at)) : []),
     ...drinks.map((d) => entry(`/portfolio/drinks/${d.slug}`, d.updated_at, 0.5)),
     ...programs.map((p) => entry(`/training-events/workshops/${p.slug}`, p.updated_at)),
     ...events.map((e) => entry(`/training-events/events/${e.slug}`, e.updated_at)),

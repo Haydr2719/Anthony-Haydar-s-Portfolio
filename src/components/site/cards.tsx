@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock, MapPin, Users } from "lucide-react";
 import { MediaFrame } from "@/components/media";
 import { Badge, Button, Eyebrow } from "@/components/ui";
-import { getBlocks, getServices } from "@/lib/data";
+import { getBlocks, getServices, getSettings } from "@/lib/data";
 import { DRINK_CATEGORIES, EVENT_STATUSES, PROGRAM_KINDS, PROJECT_CATEGORIES, labelOf } from "@/lib/options";
 import type { Drink, EventItem, Program, Project, Service } from "@/lib/types";
 import { cn, formatDateRange, formatTime } from "@/lib/utils";
@@ -24,27 +24,37 @@ export function ServiceCard({ service, index }: { service: Service; index?: numb
   );
 }
 
-export function ProjectCard({ project, large }: { project: Project; large?: boolean }) {
-  return (
-    <Link href={`/portfolio/projects/${project.slug}`} className="group block">
+export async function ProjectCard({ project, large }: { project: Project; large?: boolean }) {
+  // While detail pages are switched off (Admin -> Settings -> Portfolio) the card is
+  // a plain, non-clickable block: no link, no arrow, no hover effects.
+  const linked = Boolean((await getSettings()).show_project_details);
+  const body = (
+    <>
       <MediaFrame
         src={project.cover_image}
         alt={project.title}
         ratio={large ? "16/9" : "4/3"}
         sizes="(min-width: 1024px) 50vw, 100vw"
-        imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
+        imgClassName={linked ? "transition-transform duration-700 group-hover:scale-[1.04]" : undefined}
       />
       <div className="mt-5 flex items-start justify-between gap-4">
         <div>
           <Eyebrow>{labelOf(PROJECT_CATEGORIES, project.category)}</Eyebrow>
-          <h3 className="mt-2 text-2xl leading-tight transition-colors group-hover:text-olive-deep">{project.title}</h3>
+          <h3 className={cn("mt-2 text-2xl leading-tight", linked && "transition-colors group-hover:text-olive-deep")}>{project.title}</h3>
           {(project.client_name || project.location) && (
             <p className="mt-1 text-sm text-muted">{[project.client_name, project.location, project.year].filter(Boolean).join(" · ")}</p>
           )}
         </div>
-        <ArrowRight className="mt-6 size-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
+        {linked && <ArrowRight className="mt-6 size-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />}
       </div>
+    </>
+  );
+  return linked ? (
+    <Link href={`/portfolio/projects/${project.slug}`} className="group block">
+      {body}
     </Link>
+  ) : (
+    <div>{body}</div>
   );
 }
 

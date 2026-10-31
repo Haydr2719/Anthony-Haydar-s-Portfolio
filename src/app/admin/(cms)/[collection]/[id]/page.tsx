@@ -3,6 +3,7 @@ import { RecordForm } from "@/components/admin/record-form";
 import { AdminHeader } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/cms/auth";
 import { getCollection, type Option } from "@/lib/cms/collections";
+import { getSettings } from "@/lib/data";
 
 type Props = { params: Promise<{ collection: string; id: string }>; searchParams: Promise<{ created?: string }> };
 
@@ -48,7 +49,9 @@ export default async function EditRecordPage({ params, searchParams }: Props) {
   );
 
   const title = isNew ? `New ${col.singular.toLowerCase()}` : String(record[col.titleField] || col.singular);
-  const publicPath = !isNew && col.publicPath && record.status === "published" ? col.publicPath(record) : null;
+  // Project detail pages can be switched off in Settings - then there's nothing to view.
+  const detailsOff = col.key === "projects" && !(await getSettings()).show_project_details;
+  const publicPath = !isNew && !detailsOff && col.publicPath && record.status === "published" ? col.publicPath(record) : null;
 
   return (
     <>

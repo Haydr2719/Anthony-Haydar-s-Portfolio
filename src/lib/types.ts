@@ -42,6 +42,8 @@ export interface SiteSettings {
   default_og_image?: string | null;
   show_whatsapp_button: boolean;
   show_build_credit: boolean;
+  /** Client project detail pages are public (Settings -> Portfolio). Missing = off. */
+  show_project_details?: boolean;
 }
 
 export interface PageMeta extends Seo {

@@ -79,6 +79,7 @@ create table if not exists public.site_settings (
   default_og_image        text,
   show_whatsapp_button    boolean not null default true,
   show_build_credit       boolean not null default true,
+  show_project_details    boolean not null default false, -- client project detail pages public?
   updated_at              timestamptz not null default now()
 );
 
