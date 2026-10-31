@@ -34,6 +34,7 @@ Open http://localhost:3000. Without Supabase the site shows the built-in placeho
    |---|---|
    | `supabase/migrations/05_drink_categories.sql` | Adds the *Coffee Shop* and *Bar* drink categories |
    | `supabase/migrations/06_project_details_toggle.sql` | Adds *Settings → Portfolio → Show client project detail pages* (off by default) |
+   | `supabase/migrations/07_facebook_link.sql` | Adds *Settings → Social links → Facebook* |
    The old step-by-step files used while building the site are in `supabase/archive/dev-history/` — **don't run them on production**.
 3. **Turn off public sign-ups:** *Authentication → Sign In / Providers →* untick *Allow new users to sign up*. Admins are added by hand (step 2, file 4), so nobody needs to register. (Non-admin accounts can't see or change anything extra anyway — this just keeps the user list clean.)
 4. **Environment variables:** copy `.env.example` to `.env` (or `.env.local`) and fill in:

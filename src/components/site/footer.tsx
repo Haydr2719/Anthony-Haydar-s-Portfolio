@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { InstagramIcon, LinkedinIcon, TiktokIcon, WhatsappIcon, YoutubeIcon } from "@/components/brand-icons";
+import { FacebookIcon, InstagramIcon, LinkedinIcon, TiktokIcon, WhatsappIcon, YoutubeIcon } from "@/components/brand-icons";
 import { Logo } from "@/components/logo";
 import { CookieSettingsButton } from "@/components/site/consent";
 import type { NavItem } from "@/lib/nav";
@@ -10,6 +10,7 @@ import { whatsappLink } from "@/lib/utils";
 export function SocialLinks({ settings, className = "" }: { settings: SiteSettings; className?: string }) {
   const links = [
     { href: settings.instagram_url, label: "Instagram", Icon: InstagramIcon },
+    { href: settings.facebook_url, label: "Facebook", Icon: FacebookIcon },
     { href: settings.linkedin_url, label: "LinkedIn", Icon: LinkedinIcon },
     { href: settings.youtube_url, label: "YouTube", Icon: YoutubeIcon },
     { href: settings.tiktok_url, label: "TikTok", Icon: TiktokIcon },

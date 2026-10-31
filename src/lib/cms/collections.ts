@@ -467,6 +467,7 @@ export const SETTINGS_FIELDS: FieldDef[] = [
   { name: "location", label: "Location line", type: "text", group: "Contact details" },
   { name: "booking_url", label: "Booking link (Calendly etc.)", type: "url", group: "Contact details" },
   { name: "instagram_url", label: "Instagram", type: "url", group: "Social links", half: true },
+  { name: "facebook_url", label: "Facebook", type: "url", group: "Social links", half: true },
   { name: "linkedin_url", label: "LinkedIn", type: "url", group: "Social links", half: true },
   { name: "youtube_url", label: "YouTube", type: "url", group: "Social links", half: true },
   { name: "tiktok_url", label: "TikTok", type: "url", group: "Social links", half: true },

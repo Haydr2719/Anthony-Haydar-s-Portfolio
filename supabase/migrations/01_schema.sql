@@ -64,6 +64,7 @@ create table if not exists public.site_settings (
   whatsapp                text,          -- international format, digits only e.g. 9613123456
   location                text,
   instagram_url           text,
+  facebook_url            text,
   linkedin_url            text,
   youtube_url             text,
   tiktok_url              text,

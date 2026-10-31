@@ -87,7 +87,7 @@ export default async function HomePage() {
   // brand logo (Organization). Social links count only when they point to a
   // profile, not just a site's homepage.
   const org = `${SITE_URL}/#organization`;
-  const sameAs = [settings.instagram_url, settings.linkedin_url, settings.youtube_url, settings.tiktok_url].filter(
+  const sameAs = [settings.instagram_url, settings.facebook_url, settings.linkedin_url, settings.youtube_url, settings.tiktok_url].filter(
     (u): u is string => {
       try {
         return Boolean(u) && new URL(u!).pathname.replace(/\/+$/, "") !== "";
@@ -237,19 +237,7 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* 9. Selected work */}
-      {projects.length > 0 && (
-        <Section tone="paper-2">
-          <SectionHeader title={b.get("work.title")} text={b.get("work.text")} action={{ href: "/portfolio/projects", label: "All client projects" }} />
-          <Reveal>
-            <Scroller label="Client projects">
-              {projects.map((p) => (
-                <ProjectCard key={p.id} project={p} />
-              ))}
-            </Scroller>
-          </Reveal>
-        </Section>
-      )}
+      
 
       {/* 10. Drinks & concepts */}
       {drinks.length > 0 && (
@@ -318,6 +306,20 @@ export default async function HomePage() {
           </div>
         )}
       </Section>
+
+      {/* 9. Selected work */}
+      {projects.length > 0 && (
+        <Section tone="paper-2">
+          <SectionHeader title={b.get("work.title")} text={b.get("work.text")} action={{ href: "/portfolio/projects", label: "All client projects" }} />
+          <Reveal>
+            <Scroller label="Client projects">
+              {projects.map((p) => (
+                <ProjectCard key={p.id} project={p} />
+              ))}
+            </Scroller>
+          </Reveal>
+        </Section>
+      )}
 
       {/* 14. Testimonials / social proof - only shown when real, approved entries exist */}
       {(testimonials.length > 0 || partners.length > 0) && (
