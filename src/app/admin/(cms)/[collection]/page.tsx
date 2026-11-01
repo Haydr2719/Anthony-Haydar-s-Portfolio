@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ListActions } from "@/components/admin/list-actions";
+import { SortableRows } from "@/components/admin/sortable-rows";
 import { AdminHeader, Card, StatusPill, Thumb } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/cms/auth";
 import { getCollection } from "@/lib/cms/collections";
@@ -43,6 +44,32 @@ export default async function CollectionListPage({ params }: Props) {
     }, {});
   }
 
+  // Manually ordered lists get drag-and-drop (plus the up / down buttons).
+  const reorderable = Boolean(col.sortable && !col.orderBy);
+
+  // The row's cells, shared by the sortable and the plain list.
+  const cellsFor = (row: Row, id: string) => (
+    <>
+      <td className="px-4 py-3">
+        <Link href={`/admin/${col.key}/${encodeURIComponent(id)}`} className="flex items-center gap-3 font-medium hover:text-olive-deep">
+          {col.imageField && <Thumb src={(row[col.imageField] as string) || (row.poster_url as string)} />}
+          <span className="line-clamp-2">{String(row[col.titleField] || row.caption || row.video_url || "(untitled)")}</span>
+        </Link>
+      </td>
+      {col.columns?.map((c) => (
+        <td key={c.name} className="px-4 py-3 text-ink-3">
+          {cell(row[c.name], c.options)}
+        </td>
+      ))}
+      {col.key === "banners" && <td className="px-4 py-3 text-ink-3">{clicks[id] ?? 0}</td>}
+      {col.publishable && (
+        <td className="px-4 py-3">
+          <StatusPill status={row.status as string} publishAt={row.publish_at as string} />
+        </td>
+      )}
+    </>
+  );
+
   return (
     <>
       <AdminHeader
@@ -58,6 +85,11 @@ export default async function CollectionListPage({ params }: Props) {
           <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-stone text-left text-xs uppercase tracking-[0.12em] text-muted">
+                {reorderable && (
+                  <th className="w-px py-3 pl-3 pr-0">
+                    <span className="sr-only">Reorder</span>
+                  </th>
+                )}
                 <th className="px-4 py-3 font-medium">{col.singular}</th>
                 {col.columns?.map((c) => (
                   <th key={c.name} className="px-4 py-3 font-medium">
@@ -69,46 +101,34 @@ export default async function CollectionListPage({ params }: Props) {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody>
-              {rows.map((row, i) => {
-                const id = String(row[idField]);
-                return (
-                  <tr
-                    key={id}
-                    // Fades while this row's reorder/delete is running (ListActions sets data-pending).
-                    className="border-b border-stone/70 transition-opacity last:border-0 hover:bg-paper/60 has-data-pending:pointer-events-none has-data-pending:opacity-50"
-                  >
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/${col.key}/${encodeURIComponent(id)}`} className="flex items-center gap-3 font-medium hover:text-olive-deep">
-                        {col.imageField && <Thumb src={(row[col.imageField] as string) || (row.poster_url as string)} />}
-                        <span className="line-clamp-2">{String(row[col.titleField] || row.caption || row.video_url || "(untitled)")}</span>
-                      </Link>
-                    </td>
-                    {col.columns?.map((c) => (
-                      <td key={c.name} className="px-4 py-3 text-ink-3">
-                        {cell(row[c.name], c.options)}
-                      </td>
-                    ))}
-                    {col.key === "banners" && <td className="px-4 py-3 text-ink-3">{clicks[id] ?? 0}</td>}
-                    {col.publishable && (
+            {reorderable ? (
+              <SortableRows
+                collection={col.key}
+                canDelete={col.canDelete}
+                rows={rows.map((row) => {
+                  const id = String(row[idField]);
+                  return { id, cells: cellsFor(row, id) };
+                })}
+              />
+            ) : (
+              <tbody>
+                {rows.map((row, i) => {
+                  const id = String(row[idField]);
+                  return (
+                    <tr
+                      key={id}
+                      // Fades while this row's delete is running (ListActions sets data-pending).
+                      className="border-b border-stone/70 transition-opacity last:border-0 hover:bg-paper/60 has-data-pending:pointer-events-none has-data-pending:opacity-50"
+                    >
+                      {cellsFor(row, id)}
                       <td className="px-4 py-3">
-                        <StatusPill status={row.status as string} publishAt={row.publish_at as string} />
+                        <ListActions collection={col.key} id={id} canDelete={col.canDelete} first={i === 0} last={i === rows.length - 1} />
                       </td>
-                    )}
-                    <td className="px-4 py-3">
-                      <ListActions
-                        collection={col.key}
-                        id={id}
-                        sortable={col.sortable && !col.orderBy}
-                        canDelete={col.canDelete}
-                        first={i === 0}
-                        last={i === rows.length - 1}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            )}
           </table>
         )}
       </Card>

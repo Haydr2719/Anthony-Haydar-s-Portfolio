@@ -281,31 +281,27 @@ export default async function HomePage() {
       {/* 12. Events / HORECA */}
       {slideEvents.length > 0 && <EventSlider events={slideEvents} eyebrow={b.get("event.eyebrow")} allHref="/training-events/events" />}
 
-      {/* 13. Video / media */}
-      <Section>
-        <SectionHeader eyebrow="Media" title={b.get("media.title")} text={b.get("media.text")} action={{ href: "/media", label: "Media library" }} />
-        {videos.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {videos.map((v) => (
-              <VideoCard
-                key={v.id}
-                url={(v.video_url || v.url)!}
-                poster={v.poster_url}
-                title={v.title || "Video"}
-                orientation={v.orientation === "portrait" ? "portrait" : "landscape"}
-              />
-            ))}
-          </div>
-        ) : photos.length > 0 ? (
-          <Gallery items={photos.map(toGalleryItem)} />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            {["Developing drinks", "Training teams", "Working events"].map((l) => (
-              <MediaFrame key={l} alt={l} label={`${l} - video coming soon`} ratio="16/9" />
-            ))}
-          </div>
-        )}
-      </Section>
+      {/* 13. Video / media - hidden until featured videos or photos are uploaded */}
+      {(videos.length > 0 || photos.length > 0) && (
+        <Section>
+          <SectionHeader eyebrow="Media" title={b.get("media.title")} text={b.get("media.text")} action={{ href: "/media", label: "Media library" }} />
+          {videos.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {videos.map((v) => (
+                <VideoCard
+                  key={v.id}
+                  url={(v.video_url || v.url)!}
+                  poster={v.poster_url}
+                  title={v.title || "Video"}
+                  orientation={v.orientation === "portrait" ? "portrait" : "landscape"}
+                />
+              ))}
+            </div>
+          ) : (
+            <Gallery items={photos.map(toGalleryItem)} />
+          )}
+        </Section>
+      )}
 
       {/* 9. Selected work */}
       {projects.length > 0 && (

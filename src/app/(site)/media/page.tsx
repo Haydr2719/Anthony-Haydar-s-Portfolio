@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { MediaFrame } from "@/components/media";
 import { Gallery, VideoCard } from "@/components/media-client";
 import { BannerSlot } from "@/components/site/banners";
 import { CtaBand, PageHero } from "@/components/site/cards";
-import { Section, SectionHeader } from "@/components/ui";
+import { EmptyState, Section, SectionHeader } from "@/components/ui";
 import { getBlocks, getMedia } from "@/lib/data";
 import { toGalleryItem } from "@/lib/nav";
 import { pageMetadata } from "@/lib/seo";
@@ -22,11 +21,7 @@ export default async function MediaPage() {
 
       {empty && (
         <Section>
-          <div className="grid gap-4 md:grid-cols-3">
-            {["Behind the scenes", "Training sessions", "Events & activations"].map((l) => (
-              <MediaFrame key={l} alt={l} label={`${l} - coming soon`} ratio="4/3" />
-            ))}
-          </div>
+          <EmptyState title="Photos & videos coming soon" />
         </Section>
       )}
 

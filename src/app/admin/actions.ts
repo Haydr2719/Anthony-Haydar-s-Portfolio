@@ -191,6 +191,33 @@ export async function moveRecord(key: string, id: string, direction: "up" | "dow
   return { ok: true };
 }
 
+/**
+ * Saves a whole new order at once (drag and drop). `orderedIds` must be exactly the
+ * rows currently in the list; only rows whose position changed are updated.
+ */
+export async function reorderRecords(key: string, orderedIds: string[]): Promise<SaveResult> {
+  const col = getCollection(key);
+  if (!col?.sortable) return { ok: false, error: "Not sortable" };
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase.from(col.table).select("id, sort_order");
+  if (error || !data) return { ok: false, error: error?.message ?? "Could not load the list" };
+
+  // Someone added or removed an entry since the page loaded: don't save a stale order.
+  const current = new Map(data.map((r) => [r.id as string, r.sort_order as number]));
+  if (orderedIds.length !== current.size || new Set(orderedIds).size !== orderedIds.length || orderedIds.some((id) => !current.has(id))) {
+    return { ok: false, error: "The list changed in the meantime - please reload the page and try again." };
+  }
+
+  const changed = orderedIds.map((id, index) => ({ id, index })).filter(({ id, index }) => current.get(id) !== index);
+  const results = await Promise.all(changed.map(({ id, index }) => supabase.from(col.table).update({ sort_order: index }).eq("id", id)));
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { ok: false, error: failed.error.message };
+
+  refreshSite();
+  revalidatePath(`/admin/${key}`);
+  return { ok: true };
+}
+
 // -----------------------------------------------------------------------------
 // Settings & text blocks
 // -----------------------------------------------------------------------------
