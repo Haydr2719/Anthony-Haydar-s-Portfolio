@@ -40,6 +40,8 @@ const PHRASE_IN = 0.2;
 const PHRASE_OUT = 0.2;
 /** The CTA fades in over the last part of the scroll. */
 const CTA_START = 0.9;
+/** Desktop: the scroll hint fades out over this share of the scroll, ending as the CTA starts. */
+const HINT_FADE = 0.05;
 
 /**
  * Converts the scroll distance to pixels. ScrollTrigger's "+=" end only understands
@@ -307,7 +309,13 @@ export function HeroScroll({
         // Keep the timeline exactly 1 unit long, so positions = scroll progress.
         tl.to({}, { duration: 1 }, 0);
 
-        // The scroll hint stays visible for the whole pinned animation (no tween).
+        // The scroll hint stays visible through the animation. On desktop it sits under the
+        // text column, where the CTA appears at the end - so it fades out just before the
+        // CTA fades in (and comes back when scrolling up). Phones keep it: the text there
+        // has bottom padding that leaves room for it below the CTA.
+        if (!isMobile) {
+          tl.to("[data-hero-scroll-hint]", { autoAlpha: 0, y: 8, duration: HINT_FADE, ease: "power1.in" }, CTA_START - HINT_FADE);
+        }
 
         // Phrases: equal slices; ~20% in, ~60% hold, ~20% out. Last one stays.
         const slice = 1 / phrases.length;
@@ -392,7 +400,7 @@ export function HeroScroll({
 
         {/* ---------- Text (real HTML, never drawn on the canvas) ---------- */}
         {/* Mobile bottom padding leaves room for the always-visible scroll hint below the CTA. */}
-        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-20 text-paper [text-shadow:0_1px_12px_rgba(31,31,29,0.45)] md:order-1 md:justify-center md:px-12 md:pb-0 md:text-ink md:[text-shadow:none] lg:px-20 xl:px-24">
+        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-28 text-paper [text-shadow:0_1px_12px_rgba(31,31,29,0.45)] md:order-1 md:justify-center md:px-12 md:pb-0 md:text-ink md:[text-shadow:none] lg:px-20 xl:px-24">
           <p className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-olive-soft md:mb-6 md:text-olive-deep">{eyebrow}</p>
           {/* Mobile sizes scale with width AND height so short phones never overflow */}
           <h1 className="max-w-[22ch] font-serif text-[clamp(1.5rem,min(6.6vw,4.2svh),2.6rem)] leading-[1.06] md:max-w-none md:text-[clamp(2.2rem,3.3vw,3.6rem)]">
@@ -449,15 +457,16 @@ export function HeroScroll({
             Centred with a flex wrapper, not translate - GSAP animates this element. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center md:inset-x-auto md:bottom-6 md:left-12 lg:left-20 xl:left-24 motion-reduce:hidden"
+          className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center md:inset-x-auto md:bottom-8 md:left-12 lg:left-20 xl:left-24 motion-reduce:hidden"
         >
           <div
             data-hero-scroll-hint
-            className="flex flex-col items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.3em] text-paper/70 md:text-muted"
+            className="flex flex-col items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.3em] text-paper/90 md:text-[0.8rem] md:text-ink-3"
           >
             <span>Scroll</span>
-            <span className="relative h-8 w-px overflow-hidden bg-current/25">
-              <span className="hero-scroll-line absolute inset-x-0 top-0 h-3 bg-current" />
+            {/* Moving segment = 1/3 of the line, matching the hero-scroll-line keyframes */}
+            <span className="relative h-12 w-0.5 overflow-hidden rounded-full bg-current/25 md:h-16">
+              <span className="hero-scroll-line absolute inset-x-0 top-0 h-4 rounded-full bg-current md:h-[1.35rem]" />
             </span>
           </div>
         </div>

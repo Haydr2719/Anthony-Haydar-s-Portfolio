@@ -126,7 +126,8 @@ export default async function ServicePage({ params }: Props) {
         </div>
       </Section>
 
-      {projects.length > 0 && (
+      {/* SELECTED WORK (EXAMPLES OF THE SERVICES OFFERED TO THE CLIENTS) REQUESTED TO BE HIDDEN BY ANTHONY */}
+      {/* {projects.length > 0 && (
         <Section>
           <SectionHeader eyebrow="Relevant work" title="Selected examples" action={{ href: "/portfolio/projects", label: "All client projects" }} />
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
@@ -135,7 +136,7 @@ export default async function ServicePage({ params }: Props) {
             ))}
           </div>
         </Section>
-      )}
+      )} */}
 
       <BannerSlot placement="mid_content" page="consultancy" />
 
@@ -166,8 +167,8 @@ export default async function ServicePage({ params }: Props) {
         text="Share a few details about your business and goals. Prices are tailored to each engagement - Anthony will come back to you with a proposal."
       />
 
-      {/* SELECTED WORK (EXAMPLES OF THE SERVICES OFFERED TO THE CLIENTS) REQUESTED TO BE HIDDEN BY ANTHONY */}
-      {/* {others.length > 0 && (
+
+      {others.length > 0 && (
         <Section>
           <SectionHeader title="Other services" />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -178,7 +179,7 @@ export default async function ServicePage({ params }: Props) {
             ))}
           </ul>
         </Section>
-      )} */}
+      )}
     </>
   );
 }

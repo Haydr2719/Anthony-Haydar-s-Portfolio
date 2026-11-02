@@ -8,6 +8,7 @@ import { ContactSection, CtaBand, PageHero } from "@/components/site/cards";
 import { Section } from "@/components/ui";
 import { getBlocks, getServices } from "@/lib/data";
 import { SHOW_SERVICE_IMAGES } from "@/lib/features";
+import { cn } from "@/lib/utils";
 import { pageMetadata } from "@/lib/seo";
 
 export function generateMetadata(): Promise<Metadata> {
@@ -26,14 +27,30 @@ export default async function ConsultancyPage() {
           {services.map((s, i) => (
             <Reveal key={s.slug}>
               <article className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-20">
-                <Link href={`/consultancy/${s.slug}`} className={i % 2 ? "lg:order-2" : undefined} tabIndex={-1} aria-hidden>
+                {/* Mouse/touch shortcut to the service page; keyboard and screen readers use the "Explore" link below. */}
+                <Link href={`/consultancy/${s.slug}`} className={cn("group block", i % 2 === 1 && "lg:order-2")} tabIndex={-1} aria-hidden>
                   {SHOW_SERVICE_IMAGES ? (
                     <MediaFrame src={s.cover_image} alt={s.title} ratio="4/3" sizes="(min-width: 1024px) 50vw, 100vw" />
                   ) : (
-                    // No images (src/lib/features.ts): a deep-olive panel with the number and tagline.
-                    <div className="on-dark flex aspect-[16/9] flex-col justify-between bg-olive-deep p-8 text-paper transition-colors duration-500 hover:bg-ink md:p-12 lg:aspect-[4/3]">
+                    // No images (src/lib/features.ts): a deep-olive panel with the number, tagline and a
+                    // "see details" call to action (arrow nudges on its own; hover draws the underline).
+                    <div className="on-dark flex min-h-72 flex-col justify-between gap-10 bg-olive-deep p-8 text-paper transition-colors duration-500 group-hover:bg-ink md:p-12 lg:aspect-[4/3] lg:min-h-0">
                       <span className="font-serif text-6xl leading-none text-paper/90 md:text-8xl">0{i + 1}</span>
-                      {s.tagline && <p className="max-w-sm font-serif text-2xl leading-snug md:text-3xl">{s.tagline}</p>}
+                      <div>
+                        {s.tagline && <p className="max-w-sm font-serif text-2xl leading-snug md:text-3xl">{s.tagline}</p>}
+                        <span className="mt-6 inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.2em] md:mt-8">
+                          <span className="relative pb-1">
+                            Press here to see details
+                            <span
+                              aria-hidden
+                              className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-current transition-transform duration-500 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
+                            />
+                          </span>
+                          <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-paper/50 transition-colors duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink">
+                            <ArrowRight className="size-4 motion-safe:animate-nudge group-hover:animate-none" aria-hidden />
+                          </span>
+                        </span>
+                      </div>
                     </div>
                   )}
                 </Link>

@@ -308,7 +308,7 @@ export default async function HomePage() {
         <Section tone="paper-2">
           <SectionHeader title={b.get("work.title")} text={b.get("work.text")} action={{ href: "/portfolio/projects", label: "All client projects" }} />
           <Reveal>
-            <Scroller label="Client projects">
+            <Scroller label="Client projects" loop>
               {projects.map((p) => (
                 <ProjectCard key={p.id} project={p} />
               ))}
